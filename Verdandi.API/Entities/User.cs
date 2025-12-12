@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using Konscious.Security.Cryptography;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json.Serialization;
 
 namespace Verdandi.API.Entities;
 
@@ -28,6 +29,7 @@ public class User
     
     [Required]
     [MaxLength(128)] // Increased for salt(16)+hash(32)+base64 overhead
+    [JsonIgnore]
     [Column("password")]
     public string PasswordHash { get; private set; } = string.Empty;
     
@@ -35,6 +37,7 @@ public class User
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     
     [NotMapped]
+    [JsonIgnore]
     public string Password 
     { 
         get => throw new InvalidOperationException("Use SetPassword(string) instead.");
