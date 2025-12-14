@@ -12,3 +12,10 @@ Accept: application/json
 GET {{API_HostAddress}}/api/users
 Accept: application/json
 
+### Create document
+POST {{API_HostAddress}}/api/documents
+Accept: application/json
+
+### Get documents
+GET {{API_HostAddress}}/api/documents
+Accept: application/json

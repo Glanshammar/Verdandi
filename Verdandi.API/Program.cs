@@ -47,14 +47,12 @@ app.MapGet("/api/users", async (ApplicationDbContext db) =>
 // Create user
 app.MapPost("/api/users", async (CreateUser userDto, ApplicationDbContext db) =>
     {
-        // Check if email already exists
         var existingUser = await db.Users.FirstOrDefaultAsync(u => u.Email == userDto.Email);
         if (existingUser != null)
         {
             return Results.Conflict(new { error = "A user with this email already exists." });
         }
         
-        // Validate the request
         var validationResults = new List<ValidationResult>();
         var validationContext = new ValidationContext(userDto);
         bool isValid = Validator.TryValidateObject(userDto, validationContext, validationResults, true);
@@ -64,7 +62,6 @@ app.MapPost("/api/users", async (CreateUser userDto, ApplicationDbContext db) =>
             return Results.BadRequest(new { errors = validationResults.Select(v => v.ErrorMessage) });
         }
         
-        // Create new user
         var user = new User
         {
             Name = userDto.Name,
@@ -72,14 +69,10 @@ app.MapPost("/api/users", async (CreateUser userDto, ApplicationDbContext db) =>
             CreatedAt = DateTime.UtcNow
         };
         
-        // Hash the password
         user.SetPassword(userDto.Password);
-        
-        // Add to database
         db.Users.Add(user);
         await db.SaveChangesAsync();
         
-        // Return created user (without password hash)
         return Results.Created($"/api/users/{user.Id}", new
         {
             user.Id,
@@ -92,5 +85,63 @@ app.MapPost("/api/users", async (CreateUser userDto, ApplicationDbContext db) =>
     .Produces<object>(StatusCodes.Status201Created)
     .Produces<object>(StatusCodes.Status400BadRequest)
     .Produces<object>(StatusCodes.Status409Conflict);
+
+//Get documents
+app.MapGet("/api/documents/{id}", async (int id, ApplicationDbContext db) =>
+    {
+        var document = await db.Documents.FindAsync(id);
+        if (document == null)
+        {
+            return Results.NotFound();
+        }
+        return Results.Ok(document);
+    })
+    .WithName("GetDocumentById")
+    .Produces<Document>(StatusCodes.Status200OK)
+    .Produces(StatusCodes.Status404NotFound);
+
+
+//Create document
+app.MapPost("/api/documents", async (CreateDocument docDto, ApplicationDbContext db) =>
+    {
+        var existingDocument = await db.Documents.FirstOrDefaultAsync(doc => doc.Name == docDto.Name);
+        if (existingDocument != null)
+        {
+            return Results.Conflict(new { error = "A document with this name already exists." });
+        }
+        
+        var validationResults = new List<ValidationResult>();
+        var validationContext = new ValidationContext(docDto);
+        bool isValid = Validator.TryValidateObject(docDto, validationContext, validationResults, true);
+        
+        if (!isValid)
+        {
+            return Results.BadRequest(new { errors = validationResults.Select(v => v.ErrorMessage) });
+        }
+        
+        var document = new Document
+        {
+            Name = docDto.Name,
+            FileType = docDto.FileType,
+            FilePath = docDto.FilePath
+        };
+        
+        db.Documents.Add(document);
+        await db.SaveChangesAsync();
+        
+        return Results.Created($"/api/documents/{document.Id}", new
+        {
+            document.Id,
+            document.Name,
+            document.FileType,
+            document.FilePath,
+            document.TimeCreated
+        });
+    })
+    .WithName("CreateDocument")
+    .Produces<object>(StatusCodes.Status201Created)
+    .Produces<object>(StatusCodes.Status400BadRequest)
+    .Produces<object>(StatusCodes.Status409Conflict);
+
 
 await app.RunAsync();

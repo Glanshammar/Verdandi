@@ -10,20 +10,26 @@ public class Document
     public int Id { get; set; }
     
     [Required]
+    [MinLength(1)]
     [MaxLength(50)]
+    [Column("name")]
     public string Name { get; set; } = string.Empty;
     
-    [MaxLength(250)]
-    public string Description { get; set; } = string.Empty;
+    [Column("time_created")]
+    public DateTime TimeCreated { get; set; } =  DateTime.UtcNow;
+    
+    [Column("time_modified")]
+    public DateTime TimeModified { get; set; } =  DateTime.UtcNow;
     
     [Required]
-    public DateTime DateCreated { get; set; } =  DateTime.Now;
-    
+    [MinLength(2)]
+    [MaxLength(500)]
+    [Column("file_path")]
+    public string FilePath { get; set; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Verdandi");
+
     [Required]
-    public DateTime DateModified { get; set; } =  DateTime.Now;
-    
-    [Required]
-    [MinLength(1)]
-    [MaxLength(250)]
-    public string FilePath { get; set; } = string.Empty;
+    [MinLength(2)]
+    [MaxLength(20)]
+    [Column("file_type")]
+    public string FileType { get; set; } = ".txt";
 }

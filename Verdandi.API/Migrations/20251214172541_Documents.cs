@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Verdandi.API.Migrations
 {
     /// <inheritdoc />
-    public partial class GoalTasks : Migration
+    public partial class Documents : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -18,11 +18,11 @@ namespace Verdandi.API.Migrations
                 {
                     id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    Name = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    Description = table.Column<string>(type: "character varying(250)", maxLength: 250, nullable: false),
-                    DateCreated = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    DateModified = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    FilePath = table.Column<string>(type: "character varying(250)", maxLength: 250, nullable: false)
+                    name = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    time_created = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    time_modified = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    file_path = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                    file_type = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -66,7 +66,7 @@ namespace Verdandi.API.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     email = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    password = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    password = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
                     created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
