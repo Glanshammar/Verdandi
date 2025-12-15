@@ -2,7 +2,7 @@
 
 namespace Verdandi.API.DTO;
 
-public class CreateUser
+public class UserDto
 {
     [Required]
     [MaxLength(100)]

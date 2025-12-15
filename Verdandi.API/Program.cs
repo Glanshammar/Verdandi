@@ -45,7 +45,7 @@ app.MapGet("/api/users", async (ApplicationDbContext db) =>
     .WithName("GetUsers");
 
 // Create user
-app.MapPost("/api/users", async (CreateUser userDto, ApplicationDbContext db) =>
+app.MapPost("/api/users", async (UserDto userDto, ApplicationDbContext db) =>
     {
         var existingUser = await db.Users.FirstOrDefaultAsync(u => u.Email == userDto.Email);
         if (existingUser != null)
@@ -102,7 +102,7 @@ app.MapGet("/api/documents/{id}", async (int id, ApplicationDbContext db) =>
 
 
 //Create document
-app.MapPost("/api/documents", async (CreateDocument docDto, ApplicationDbContext db) =>
+app.MapPost("/api/documents", async (DocumentDto docDto, ApplicationDbContext db) =>
     {
         var existingDocument = await db.Documents.FirstOrDefaultAsync(doc => doc.Name == docDto.Name);
         if (existingDocument != null)

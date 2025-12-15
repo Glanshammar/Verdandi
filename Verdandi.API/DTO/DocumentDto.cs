@@ -2,7 +2,7 @@
 
 namespace Verdandi.API.DTO;
 
-public class CreateDocument
+public class DocumentDto
 {
     [Required]
     [MaxLength(50)]
