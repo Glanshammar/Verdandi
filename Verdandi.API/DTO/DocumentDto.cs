@@ -14,5 +14,20 @@ public class DocumentDto
     
     [MinLength(1)]
     [MaxLength(500)]
-    public string FilePath { get; set; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Verdandi");
+    public string FilePath { get; set; } = string.Empty;
+
+    
+    public string GetFullFilePath()
+    {
+        if (!string.IsNullOrWhiteSpace(FilePath))
+        {
+            return FilePath;
+        }
+        
+        return Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), 
+            "Verdandi", 
+            $"{Name}{FileType}"
+        );
+    }
 }

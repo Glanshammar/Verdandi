@@ -25,7 +25,7 @@ public class Document
     [MinLength(2)]
     [MaxLength(500)]
     [Column("file_path")]
-    public string FilePath { get; set; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Verdandi");
+    public string FilePath { get; set; } = string.Empty;
 
     [Required]
     [MinLength(2)]
