@@ -95,9 +95,8 @@ public class DocumentsController : ControllerBase
             _context.Documents.Add(document);
             await _context.SaveChangesAsync();
             
-            string baseDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Verdandi");
-            string fullFilePath = Path.Combine(baseDir, docDto.Name + docDto.FileType);
-            Directory.CreateDirectory(baseDir);
+            string fullFilePath = Path.Combine(docDto.FilePath, docDto.Name + docDto.FileType);
+            Directory.CreateDirectory(docDto.GetFullFilePath());
             var fileStream = System.IO.File.Create(fullFilePath);
             await fileStream.DisposeAsync();
             document.FilePath = fullFilePath;
