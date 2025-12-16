@@ -180,6 +180,11 @@ public class DocumentsController : ControllerBase
                 return NotFound(new { error = $"Document with ID {id} not found" });
             }
             
+            if (System.IO.File.Exists(document.FilePath))
+            {
+                System.IO.File.Delete(document.FilePath);
+            }
+            
             _context.Documents.Remove(document);
             await _context.SaveChangesAsync();
             
