@@ -2,6 +2,23 @@
 
 namespace Verdandi.API.DTO;
 
+public static class FilePaths
+{
+    public static string GetFullFilePath(string? fileName = null, string? fileType = null, string? filePath = null)
+    {
+        if (!string.IsNullOrWhiteSpace(filePath))
+        {
+            return filePath.Replace('\\', '/');
+        }
+            
+        return Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), 
+            "Verdandi", 
+            $"{fileName}{fileType}"
+        ).Replace('\\', '/');
+    }
+}
+
 public class DocumentDto
 {
     [Required]
@@ -12,22 +29,17 @@ public class DocumentDto
     [Required]
     public string FileType { get; set; } = ".txt";
     
-    [MinLength(1)]
     [MaxLength(500)]
     public string FilePath { get; set; } = string.Empty;
+}
 
+public class UpdateDocumentDto
+{
+    [MaxLength(50)]
+    public string? Name { get; set; }
     
-    public string GetFullFilePath()
-    {
-        if (!string.IsNullOrWhiteSpace(FilePath))
-        {
-            return FilePath;
-        }
-        
-        return Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), 
-            "Verdandi", 
-            $"{Name}{FileType}"
-        );
-    }
+    public string? FileType { get; set; }
+    
+    [MaxLength(500)]
+    public string? FilePath { get; set; }
 }

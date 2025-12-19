@@ -89,17 +89,15 @@ public class DocumentsController : ControllerBase
             {
                 Name = docDto.Name,
                 FileType = docDto.FileType,
-                FilePath = docDto.GetFullFilePath()
+                FilePath = Path.Combine(FilePaths.GetFullFilePath(), docDto.Name + docDto.FileType)
             };
             
             _context.Documents.Add(document);
             await _context.SaveChangesAsync();
             
-            string fullFilePath = Path.Combine(docDto.FilePath, docDto.Name + docDto.FileType);
-            Directory.CreateDirectory(docDto.GetFullFilePath());
-            var fileStream = System.IO.File.Create(fullFilePath);
+            Directory.CreateDirectory(FilePaths.GetFullFilePath());
+            var fileStream = System.IO.File.Create(document.FilePath);
             await fileStream.DisposeAsync();
-            document.FilePath = fullFilePath;
             
             return CreatedAtAction(nameof(GetDocument), new { id = document.Id }, new
             {
@@ -122,7 +120,7 @@ public class DocumentsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult> UpdateDocument(int id, [FromBody] DocumentDto docDto)
+    public async Task<ActionResult> UpdateDocument(int id, [FromBody] UpdateDocumentDto docDto)
     {
         try
         {
@@ -132,9 +130,9 @@ public class DocumentsController : ControllerBase
                 return NotFound(new { error = $"Document with ID {id} not found" });
             }
 
-            if (document.Name != docDto.Name)
+            if (docDto.Name != null && document.Name != docDto.Name)
             {
-                var nameExists = await _context.Documents.AnyAsync(d => d.Name == docDto.Name);
+                var nameExists = await _context.Documents.AnyAsync(d => d.Name == docDto.Name && d.Id != id);
                 if (nameExists)
                 {
                     return Conflict(new { error = "A document with this name already exists." });
@@ -149,14 +147,53 @@ public class DocumentsController : ControllerBase
             {
                 return BadRequest(new { errors = validationResults.Select(v => v.ErrorMessage) });
             }
+
+            if (!string.IsNullOrEmpty(docDto.FilePath))
+            {
+                string newFullFilePath = docDto.FilePath;
+                bool isDirectory = newFullFilePath.EndsWith(Path.DirectorySeparatorChar) || 
+                                   newFullFilePath.EndsWith('/');
             
-            document.Name = docDto.Name;
-            document.FileType = docDto.FileType;
-            document.FilePath = docDto.FilePath;
+                if (isDirectory)
+                {
+                    string fileName = docDto.Name ?? document.Name;
+                    string fileType = docDto.FileType ?? document.FileType;
+                    newFullFilePath = Path.Combine(newFullFilePath, fileName + fileType).Replace('\\', '/');
+                }
+                else
+                {
+                    newFullFilePath = newFullFilePath.Replace('\\', '/');
+                }
+            
+                string? directoryPath = Path.GetDirectoryName(newFullFilePath);
+                if (!string.IsNullOrEmpty(directoryPath))
+                {
+                    Directory.CreateDirectory(directoryPath);
+                }
+            
+                if (document.FilePath != newFullFilePath)
+                {
+                    if (System.IO.File.Exists(document.FilePath))
+                    {
+                        System.IO.File.Move(document.FilePath, newFullFilePath);
+                    }
+                    else
+                    {
+                        await using var fileStream = System.IO.File.Create(newFullFilePath);
+                    }
+                    document.FilePath = newFullFilePath;
+                }
+            }
+        
+            if(docDto.Name != null && document.Name != docDto.Name)
+                document.Name = docDto.Name;
+        
+            if(docDto.FileType != null)
+                document.FileType = docDto.FileType;
+        
             document.TimeModified = DateTime.UtcNow;
-            
+        
             await _context.SaveChangesAsync();
-            
             return NoContent();
         }
         catch (Exception ex)
