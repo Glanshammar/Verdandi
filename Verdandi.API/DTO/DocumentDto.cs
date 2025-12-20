@@ -8,14 +8,14 @@ public static class FilePaths
     {
         if (!string.IsNullOrWhiteSpace(filePath))
         {
-            return filePath.Replace('\\', '/');
+            return filePath;
         }
             
         return Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), 
             "Verdandi", 
             $"{fileName}{fileType}"
-        ).Replace('\\', '/');
+        );
     }
 }
 

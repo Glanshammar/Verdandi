@@ -89,7 +89,7 @@ public class DocumentsController : ControllerBase
             {
                 Name = docDto.Name,
                 FileType = docDto.FileType,
-                FilePath = Path.Combine(FilePaths.GetFullFilePath(), docDto.Name + docDto.FileType)
+                FilePath = Path.Combine(FilePaths.GetFullFilePath(), docDto.Name + docDto.FileType).Replace('\\', '/')
             };
             
             _context.Documents.Add(document);
