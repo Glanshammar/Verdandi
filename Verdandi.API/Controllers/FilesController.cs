@@ -9,120 +9,143 @@ namespace Verdandi.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class DocumentsController : ControllerBase
+public class FilesController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
-    private readonly ILogger<DocumentsController> _logger;
+    private readonly ILogger<FilesController> _logger;
 
-    public DocumentsController(ApplicationDbContext context, ILogger<DocumentsController> logger)
+    public FilesController(ApplicationDbContext context, ILogger<FilesController> logger)
     {
         _context = context;
         _logger = logger;
     }
 
-    // Get all documents
+    // Get all/selective files
     [HttpGet]
-    [ProducesResponseType(typeof(IEnumerable<Document>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<IEnumerable<Document>>> GetDocuments(
+    [ProducesResponseType(typeof(IEnumerable<Files>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<IEnumerable<Files>>> GetFiles(
         [FromQuery] string? search = null,
         [FromQuery] string? fileType = null,
         [FromQuery] DateTime? minCreated = null)
     {
         try
         {
-            var query = _context.Documents.AsNoTracking();
+            var query = _context.Files.AsNoTracking();
             
             if (!string.IsNullOrEmpty(search))
                 query = query.Where(d => EF.Functions.Like(d.Name, $"%{search}%") || 
                                          EF.Functions.Like(d.FilePath, $"%{search}%"));
+            
             if (!string.IsNullOrEmpty(fileType))
-                query = query.Where(d => d.FileType == fileType);
+            {
+                var categoryMap = new Dictionary<string, string[]>
+                {
+                    ["audio"] = [".mp3", ".wav", ".flac", ".aac"],
+                    ["image"] = [".jpg", ".png", ".gif", ".webp"],
+                    ["video"] = [".mp4", ".avi", ".mkv", ".webm"],
+                    ["document"] = [".pdf", ".docx", ".txt", ".md"]
+                };
+
+                // Split and clean file types (e.g. "audio,image,txt")
+                var fileTypeTokens = fileType
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                    .Select(t => t.ToLower())
+                    .ToList();
+
+                // Collect all extensions for the provided types
+                var allowedExtensions = new HashSet<string>(
+                    fileTypeTokens
+                        .SelectMany(t => categoryMap.TryGetValue(t, out var exts) ? exts : [t])
+                );
+
+                query = query.Where(f => allowedExtensions.Contains(f.FileType.ToLower()));
+            }
+                
             if (minCreated.HasValue)
             {
                 var minCreatedUtc = DateTime.SpecifyKind(minCreated.Value.Date, DateTimeKind.Utc);
                 query = query.Where(d => d.TimeCreated >= minCreatedUtc);
             }
 
-            var documents = await query.ToListAsync();
-            
-            return Ok(documents);
+            var filesList = await query.ToListAsync();
+            return Ok(filesList);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting documents");
-            return StatusCode(500, new { error = "An error occurred while retrieving documents" });
+            _logger.LogError(ex, "Error getting files.");
+            return StatusCode(500, new { error = "An error occurred while retrieving files." });
         }
     }
 
-    // Get a document by ID
+    // Get a file by ID
     [HttpGet("{id}")]
-    [ProducesResponseType(typeof(Document), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(Files), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<Document>> GetDocument(int id)
+    public async Task<ActionResult<Files>> GetFile(int id)
     {
         try
         {
-            var document = await _context.Documents.FindAsync(id);
+            var file = await _context.Files.FindAsync(id);
             
-            if (document == null)
+            if (file == null)
             {
-                return NotFound(new { error = $"Document with ID {id} not found" });
+                return NotFound(new { error = $"File with ID {id} not found." });
             }
             
-            return Ok(document);
+            return Ok(file);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting document with ID {DocumentId}", id);
-            return StatusCode(500, new { error = "An error occurred while retrieving the document" });
+            _logger.LogError(ex, "Error getting file with ID {DocumentId}.", id);
+            return StatusCode(500, new { error = "An error occurred while retrieving the file." });
         }
     }
 
-    // Create document
+    // Create file
     [HttpPost]
     [ProducesResponseType(typeof(object), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public async Task<ActionResult> CreateDocument([FromBody] DocumentDto docDto)
+    public async Task<ActionResult> CreateFile([FromBody] FileDto fileDto)
     {
         try
         {
-            var existingDocument = await _context.Documents.FirstOrDefaultAsync(doc => doc.Name == docDto.Name);
-            if (existingDocument != null)
+            var existingFile = await _context.Files.FirstOrDefaultAsync(file => file.Name == fileDto.Name);
+            if (existingFile != null)
             {
-                return Conflict(new { error = "A document with this name already exists." });
+                return Conflict(new { error = "A file with this name already exists." });
             }
             
             var validationResults = new List<ValidationResult>();
-            var validationContext = new ValidationContext(docDto);
-            bool isValid = Validator.TryValidateObject(docDto, validationContext, validationResults, true);
+            var validationContext = new ValidationContext(fileDto);
+            bool isValid = Validator.TryValidateObject(fileDto, validationContext, validationResults, true);
             
             if (!isValid)
             {
                 return BadRequest(new { errors = validationResults.Select(v => v.ErrorMessage) });
             }
             
-            var document = new Document
+            var file = new Files
             {
-                Name = docDto.Name,
-                FileType = docDto.FileType,
-                FilePath = Path.Combine(FilePaths.GetFullFilePath(), docDto.Name + docDto.FileType).Replace('\\', '/')
+                Name = fileDto.Name,
+                FileType = fileDto.FileType,
+                FilePath = Path.Combine(FilePaths.GetFullFilePath(), fileDto.Name + fileDto.FileType).Replace('\\', '/')
             };
             
-            _context.Documents.Add(document);
+            _context.Files.Add(file);
             await _context.SaveChangesAsync();
             
             Directory.CreateDirectory(FilePaths.GetFullFilePath());
-            var fileStream = System.IO.File.Create(document.FilePath);
+            var fileStream = System.IO.File.Create(file.FilePath);
             await fileStream.DisposeAsync();
             
-            return CreatedAtAction(nameof(GetDocument), new { id = document.Id }, new
+            return CreatedAtAction(nameof(GetFile), new { id = file.Id }, new
             {
-                document.Id,
-                document.Name,
-                document.FileType,
-                document.FilePath,
-                document.TimeCreated
+                file.Id,
+                file.Name,
+                file.FileType,
+                file.FilePath,
+                file.TimeCreated
             });
         }
         catch (Exception ex)
@@ -132,24 +155,24 @@ public class DocumentsController : ControllerBase
         }
     }
 
-    // Update a document by ID
+    // Update a file by ID
     [HttpPut("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult> UpdateDocument(int id, [FromBody] UpdateDocumentDto docDto)
+    public async Task<ActionResult> UpdateDocument(int id, [FromBody] UpdateFileDto fileDto)
     {
         try
         {
-            var document = await _context.Documents.FindAsync(id);
-            if (document == null)
+            var file = await _context.Files.FindAsync(id);
+            if (file == null)
             {
                 return NotFound(new { error = $"Document with ID {id} not found" });
             }
 
-            if (!string.IsNullOrEmpty(docDto.Name) && document.Name != docDto.Name)
+            if (!string.IsNullOrEmpty(fileDto.Name) && file.Name != fileDto.Name)
             {
-                var nameExists = await _context.Documents.AnyAsync(d => d.Name == docDto.Name && d.Id != id);
+                var nameExists = await _context.Files.AnyAsync(d => d.Name == fileDto.Name && d.Id != id);
                 if (nameExists)
                 {
                     return Conflict(new { error = "A document with this name already exists." });
@@ -157,24 +180,24 @@ public class DocumentsController : ControllerBase
             }
             
             var validationResults = new List<ValidationResult>();
-            var validationContext = new ValidationContext(docDto);
-            bool isValid = Validator.TryValidateObject(docDto, validationContext, validationResults, true);
+            var validationContext = new ValidationContext(fileDto);
+            bool isValid = Validator.TryValidateObject(fileDto, validationContext, validationResults, true);
             
             if (!isValid)
             {
                 return BadRequest(new { errors = validationResults.Select(v => v.ErrorMessage) });
             }
 
-            if (!string.IsNullOrEmpty(docDto.FilePath))
+            if (!string.IsNullOrEmpty(fileDto.FilePath))
             {
-                string newFullFilePath = docDto.FilePath;
+                string newFullFilePath = fileDto.FilePath;
                 bool isDirectory = newFullFilePath.EndsWith(Path.DirectorySeparatorChar) || 
                                    newFullFilePath.EndsWith('/');
             
                 if (isDirectory)
                 {
-                    string fileName = docDto.Name ?? document.Name;
-                    string fileType = docDto.FileType ?? document.FileType;
+                    string fileName = fileDto.Name ?? file.Name;
+                    string fileType = fileDto.FileType ?? file.FileType;
                     newFullFilePath = Path.Combine(newFullFilePath, fileName + fileType).Replace('\\', '/');
                 }
                 else
@@ -188,35 +211,35 @@ public class DocumentsController : ControllerBase
                     Directory.CreateDirectory(directoryPath);
                 }
             
-                if (document.FilePath != newFullFilePath)
+                if (file.FilePath != newFullFilePath)
                 {
-                    if (System.IO.File.Exists(document.FilePath))
+                    if (System.IO.File.Exists(file.FilePath))
                     {
-                        System.IO.File.Move(document.FilePath, newFullFilePath);
+                        System.IO.File.Move(file.FilePath, newFullFilePath);
                     }
                     else
                     {
                         await using var fileStream = System.IO.File.Create(newFullFilePath);
                     }
-                    document.FilePath = newFullFilePath;
+                    file.FilePath = newFullFilePath;
                 }
             }
         
-            if(docDto.Name != null && document.Name != docDto.Name)
-                document.Name = docDto.Name;
+            if(fileDto.Name != null && file.Name != fileDto.Name)
+                file.Name = fileDto.Name;
         
-            if(docDto.FileType != null)
-                document.FileType = docDto.FileType;
+            if(fileDto.FileType != null)
+                file.FileType = fileDto.FileType;
         
-            document.TimeModified = DateTime.UtcNow;
+            file.TimeModified = DateTime.UtcNow;
         
             await _context.SaveChangesAsync();
             return NoContent();
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error updating document with ID {DocumentId}", id);
-            return StatusCode(500, new { error = "An error occurred while updating the document" });
+            _logger.LogError(ex, "Error updating file with ID {FileID}.", id);
+            return StatusCode(500, new { error = "An error occurred while updating the file." });
         }
     }
 
@@ -224,11 +247,11 @@ public class DocumentsController : ControllerBase
     [HttpDelete("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult> DeleteDocument(int id)
+    public async Task<ActionResult> DeleteFile(int id)
     {
         try
         {
-            var document = await _context.Documents.FindAsync(id);
+            var document = await _context.Files.FindAsync(id);
             if (document == null)
             {
                 return NotFound(new { error = $"Document with ID {id} not found" });
@@ -239,7 +262,7 @@ public class DocumentsController : ControllerBase
                 System.IO.File.Delete(document.FilePath);
             }
             
-            _context.Documents.Remove(document);
+            _context.Files.Remove(document);
             await _context.SaveChangesAsync();
             
             return NoContent();

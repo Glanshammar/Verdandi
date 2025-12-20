@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Verdandi.API.Entities;
 
-public class Document
+public class Files
 {
     [Key]
     [Column("id")]
@@ -30,5 +30,5 @@ public class Document
     [MinLength(2)]
     [MaxLength(20)]
     [Column("file_type")]
-    public string FileType { get; set; } = ".txt";
+    public string FileType { get; set; } = ".file";
 }

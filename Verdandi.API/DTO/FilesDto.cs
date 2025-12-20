@@ -19,21 +19,21 @@ public static class FilePaths
     }
 }
 
-public class DocumentDto
+public class FileDto
 {
     [Required]
-    [MaxLength(50)]
-    [MinLength(1)]
+    [MinLength(1), MaxLength(50)]
     public string Name { get; set; } = string.Empty;
 
     [Required]
-    public string FileType { get; set; } = ".txt";
+    [MinLength(2), MaxLength(50)]
+    public string FileType { get; set; } = ".file";
     
     [MaxLength(500)]
     public string FilePath { get; set; } = string.Empty;
 }
 
-public class UpdateDocumentDto
+public class UpdateFileDto
 {
     [MaxLength(50)]
     public string? Name { get; set; }

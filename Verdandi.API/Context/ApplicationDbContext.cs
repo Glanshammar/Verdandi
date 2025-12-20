@@ -18,7 +18,7 @@ public partial class ApplicationDbContext : DbContext
     }
 
     public DbSet<User> Users => Set<User>();
-    public DbSet<Document> Documents => Set<Document>();
+    public DbSet<Files> Files => Set<Files>();
     public DbSet<Goal> Goals => Set<Goal>();
     public DbSet<Task> Tasks => Set<Task>();
     public DbSet<GoalTask> GoalTasks => Set<GoalTask>();
@@ -41,7 +41,6 @@ public partial class ApplicationDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        // Configure the many-to-many relationship
         modelBuilder.Entity<Goal>()
             .HasMany(g => g.Tasks)
             .WithMany(t => t.Goals)
@@ -59,10 +58,5 @@ public partial class ApplicationDbContext : DbContext
                     j.HasKey(gt => gt.Id);
                     j.ToTable("GoalTasks");
                 });
-        
-        OnModelCreatingPartial(modelBuilder);
     }
-
-
-    partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
 }
