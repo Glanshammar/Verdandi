@@ -88,9 +88,7 @@ public class FilesController : ControllerBase
             var file = await _context.Files.FindAsync(id);
             
             if (file == null)
-            {
                 return NotFound(new { error = $"File with ID {id} not found." });
-            }
             
             return Ok(file);
         }
@@ -112,18 +110,14 @@ public class FilesController : ControllerBase
         {
             var existingFile = await _context.Files.FirstOrDefaultAsync(file => file.Name == fileDto.Name);
             if (existingFile != null)
-            {
                 return Conflict(new { error = "A file with this name already exists." });
-            }
             
             var validationResults = new List<ValidationResult>();
             var validationContext = new ValidationContext(fileDto);
             bool isValid = Validator.TryValidateObject(fileDto, validationContext, validationResults, true);
             
             if (!isValid)
-            {
                 return BadRequest(new { errors = validationResults.Select(v => v.ErrorMessage) });
-            }
             
             var file = new Files
             {
@@ -166,17 +160,13 @@ public class FilesController : ControllerBase
         {
             var file = await _context.Files.FindAsync(id);
             if (file == null)
-            {
                 return NotFound(new { error = $"Document with ID {id} not found" });
-            }
 
             if (!string.IsNullOrEmpty(fileDto.Name) && file.Name != fileDto.Name)
             {
                 var nameExists = await _context.Files.AnyAsync(d => d.Name == fileDto.Name && d.Id != id);
                 if (nameExists)
-                {
                     return Conflict(new { error = "A document with this name already exists." });
-                }
             }
             
             var validationResults = new List<ValidationResult>();
@@ -184,9 +174,7 @@ public class FilesController : ControllerBase
             bool isValid = Validator.TryValidateObject(fileDto, validationContext, validationResults, true);
             
             if (!isValid)
-            {
                 return BadRequest(new { errors = validationResults.Select(v => v.ErrorMessage) });
-            }
 
             if (!string.IsNullOrEmpty(fileDto.FilePath))
             {
@@ -206,10 +194,9 @@ public class FilesController : ControllerBase
                 }
             
                 string? directoryPath = Path.GetDirectoryName(newFullFilePath);
+                
                 if (!string.IsNullOrEmpty(directoryPath))
-                {
                     Directory.CreateDirectory(directoryPath);
-                }
             
                 if (file.FilePath != newFullFilePath)
                 {
@@ -243,7 +230,7 @@ public class FilesController : ControllerBase
         }
     }
 
-    // Delete a document by ID
+    // Delete a file by ID
     [HttpDelete("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -251,18 +238,15 @@ public class FilesController : ControllerBase
     {
         try
         {
-            var document = await _context.Files.FindAsync(id);
-            if (document == null)
-            {
+            var file = await _context.Files.FindAsync(id);
+            
+            if (file == null)
                 return NotFound(new { error = $"Document with ID {id} not found" });
-            }
             
-            if (System.IO.File.Exists(document.FilePath))
-            {
-                System.IO.File.Delete(document.FilePath);
-            }
+            if (System.IO.File.Exists(file.FilePath))
+                System.IO.File.Delete(file.FilePath);
             
-            _context.Files.Remove(document);
+            _context.Files.Remove(file);
             await _context.SaveChangesAsync();
             
             return NoContent();
