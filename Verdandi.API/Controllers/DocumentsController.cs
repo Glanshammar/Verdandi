@@ -23,11 +23,28 @@ public class DocumentsController : ControllerBase
     // Get all documents
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<Document>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<IEnumerable<Document>>> GetDocuments()
+    public async Task<ActionResult<IEnumerable<Document>>> GetDocuments(
+        [FromQuery] string? search = null,
+        [FromQuery] string? fileType = null,
+        [FromQuery] DateTime? minCreated = null)
     {
         try
         {
-            var documents = await _context.Documents.ToListAsync();
+            var query = _context.Documents.AsNoTracking();
+            
+            if (!string.IsNullOrEmpty(search))
+                query = query.Where(d => EF.Functions.Like(d.Name, $"%{search}%") || 
+                                         EF.Functions.Like(d.FilePath, $"%{search}%"));
+            if (!string.IsNullOrEmpty(fileType))
+                query = query.Where(d => d.FileType == fileType);
+            if (minCreated.HasValue)
+            {
+                var minCreatedUtc = DateTime.SpecifyKind(minCreated.Value.Date, DateTimeKind.Utc);
+                query = query.Where(d => d.TimeCreated >= minCreatedUtc);
+            }
+
+            var documents = await query.ToListAsync();
+            
             return Ok(documents);
         }
         catch (Exception ex)
@@ -130,7 +147,7 @@ public class DocumentsController : ControllerBase
                 return NotFound(new { error = $"Document with ID {id} not found" });
             }
 
-            if (docDto.Name != null && document.Name != docDto.Name)
+            if (!string.IsNullOrEmpty(docDto.Name) && document.Name != docDto.Name)
             {
                 var nameExists = await _context.Documents.AnyAsync(d => d.Name == docDto.Name && d.Id != id);
                 if (nameExists)
