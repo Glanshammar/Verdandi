@@ -131,3 +131,42 @@ Content-Type: application/json
 
 ### Delete task
 DELETE {{API_HostAddress}}/api/tasks/1
+
+### Get files
+GET {{API_HostAddress}}/api/files
+
+### Get single file
+GET {{API_HostAddress}}/api/files/1
+
+### Add file
+POST {{API_HostAddress}}/api/files
+Content-Type: application/json
+
+{
+  "name": "New File",
+  "fileType": ".txt",
+  "filePath": "C:/Users/"
+}
+
+### Update file
+PUT {{API_HostAddress}}/api/files/4
+Content-Type: application/json
+
+{
+  "name": "New File Name",
+  "fileType": ".txt",
+  "filePath": "C:/Users/"
+}
+
+### Delete file
+DELETE {{API_HostAddress}}/api/files/1
+
+### Download single file
+GET {{API_HostAddress}}/api/files/1/download
+
+### Download multiple files
+POST {{API_HostAddress}}/api/files/download
+
+{
+  "ids": [1, 2]
+}
