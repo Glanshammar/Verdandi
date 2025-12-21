@@ -7,21 +7,17 @@ public static class FilePaths
     public static string GetFullFilePath(string? fileName = null, string? fileType = null, string? filePath = null)
     {
         if (!string.IsNullOrWhiteSpace(filePath))
-        {
-            return filePath;
-        }
-            
+            return Path.Combine(filePath, $"{fileName}{fileType}");
+        
         return Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), 
-            "Verdandi", 
-            $"{fileName}{fileType}"
+            Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Verdandi", $"{fileName}{fileType}"
         );
     }
-    
-    public static string GetDownloadsPath()
+
+    public static string GetDefaultDirectory()
     {
-        string userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-        return Path.Combine(userProfile, "Downloads");
+        return Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Verdandi");
     }
 }
 
@@ -36,7 +32,7 @@ public class FileDto
     public string FileType { get; set; } = ".file";
     
     [MaxLength(500)]
-    public string FilePath { get; set; } = string.Empty;
+    public string FilePath { get; set; } = FilePaths.GetDefaultDirectory();
 }
 
 public class UpdateFileDto

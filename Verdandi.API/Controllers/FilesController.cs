@@ -119,18 +119,18 @@ public class FilesController : ControllerBase
             
             if (!isValid)
                 return BadRequest(new { errors = validationResults.Select(v => v.ErrorMessage) });
-            
+
             var file = new Files
             {
                 Name = fileDto.Name,
                 FileType = fileDto.FileType,
-                FilePath = Path.Combine(FilePaths.GetFullFilePath(), fileDto.Name + fileDto.FileType).Replace('\\', '/')
+                FilePath = FilePaths.GetFullFilePath(fileDto.Name, fileDto.FileType, fileDto.FilePath).Replace('\\', '/')
             };
-            
+
             _context.Files.Add(file);
             await _context.SaveChangesAsync();
             
-            Directory.CreateDirectory(FilePaths.GetFullFilePath());
+            Directory.CreateDirectory(fileDto.FilePath);
             var fileStream = System.IO.File.Create(file.FilePath);
             await fileStream.DisposeAsync();
             
