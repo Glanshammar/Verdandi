@@ -1,9 +1,5 @@
-using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
-using Verdandi.API;
 using Verdandi.API.Context;
-using Verdandi.API.DTO;
-using Verdandi.API.Entities;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +8,14 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DevelopmentConnection")));
 
 builder.Services.AddControllers();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+        policy.AllowAnyOrigin()
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .WithExposedHeaders("Content-Disposition"));
+});
 
 var app = builder.Build();
 
@@ -27,17 +31,14 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.MapControllers();
+app.UseCors("AllowAll");
 
 // Simple status endpoint
-app.MapGet("/api/status", () =>
-    {
-        return Results.Ok(new { 
-            status = "ok", 
-            message = "API is online and running",
-            timestamp = DateTime.UtcNow
-        });
-    })
+app.MapGet("/api/status", () => Results.Ok(new { 
+        status = "ok", 
+        message = "API is online and running",
+        timestamp = DateTime.UtcNow 
+    }))
     .WithName("GetApiStatus");
-
 
 await app.RunAsync();
