@@ -2,48 +2,11 @@
 
 namespace Verdandi.API.DTO;
 
-public static class FilePaths
-{
-    public static string GetFullFilePath(string? fileName = null, string? fileType = null, string? filePath = null)
-    {
-        if (!string.IsNullOrWhiteSpace(filePath))
-            return Path.Combine(filePath, $"{fileName}{fileType}");
-        
-        return Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Verdandi", $"{fileName}{fileType}"
-        );
-    }
-
-    public static string GetDefaultDirectory()
-    {
-        return Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Verdandi");
-    }
-}
-
 public class FileDto
 {
     [Required]
-    [MinLength(1), MaxLength(50)]
-    public string Name { get; set; } = string.Empty;
-
-    [Required]
-    [MinLength(2), MaxLength(50)]
-    public string FileType { get; set; } = ".file";
-    
-    [MaxLength(500)]
-    public string FilePath { get; set; } = FilePaths.GetDefaultDirectory();
-}
-
-public class UpdateFileDto
-{
-    [MaxLength(50)]
-    public string? Name { get; set; }
-    
-    public string? FileType { get; set; }
-    
-    [MaxLength(500)]
-    public string? FilePath { get; set; }
+    [MinLength(1), MaxLength(500)]
+    public string FilePath { get; set; } = string.Empty;
 }
 
 public class DownloadRequestDto

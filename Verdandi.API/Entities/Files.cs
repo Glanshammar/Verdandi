@@ -11,7 +11,7 @@ public class Files
     
     [Required]
     [MinLength(1)]
-    [MaxLength(50)]
+    [MaxLength(500)]
     [Column("name")]
     public string Name { get; set; } = string.Empty;
     

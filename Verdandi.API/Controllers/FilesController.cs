@@ -95,24 +95,20 @@ public class FilesController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting file with ID {DocumentId}.", id);
+            _logger.LogError(ex, "Error getting file with ID {FileID}.", id);
             return StatusCode(500, new { error = "An error occurred while retrieving the file." });
         }
     }
 
-    // Create file
+    // Add file to database
     [HttpPost]
     [ProducesResponseType(typeof(object), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public async Task<ActionResult> CreateFile([FromBody] FileDto fileDto)
+    public async Task<ActionResult> AddFile([FromBody] FileDto fileDto)
     {
         try
         {
-            var existingFile = await _context.Files.FirstOrDefaultAsync(file => file.Name == fileDto.Name);
-            if (existingFile != null)
-                return Conflict(new { error = "A file with this name already exists." });
-            
             var validationResults = new List<ValidationResult>();
             var validationContext = new ValidationContext(fileDto);
             bool isValid = Validator.TryValidateObject(fileDto, validationContext, validationResults, true);
@@ -122,112 +118,26 @@ public class FilesController : ControllerBase
 
             var file = new Files
             {
-                Name = fileDto.Name,
-                FileType = fileDto.FileType,
-                FilePath = FilePaths.GetFullFilePath(fileDto.Name, fileDto.FileType, fileDto.FilePath).Replace('\\', '/')
+                Name = Path.GetFileName(fileDto.FilePath),
+                FileType = Path.GetExtension(fileDto.FilePath),
+                FilePath = fileDto.FilePath.Replace('\\', '/')
             };
 
             _context.Files.Add(file);
             await _context.SaveChangesAsync();
             
-            Directory.CreateDirectory(fileDto.FilePath);
-            var fileStream = System.IO.File.Create(file.FilePath);
-            await fileStream.DisposeAsync();
-            
             return CreatedAtAction(nameof(GetFile), new { id = file.Id }, new
             {
                 file.Id,
                 file.Name,
-                file.FileType,
                 file.FilePath,
                 file.TimeCreated
             });
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error creating document");
-            return StatusCode(500, new { error = "An error occurred while creating the document" });
-        }
-    }
-
-    // Update a file by ID
-    [HttpPut("{id}")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult> UpdateDocument(int id, [FromBody] UpdateFileDto fileDto)
-    {
-        try
-        {
-            var file = await _context.Files.FindAsync(id);
-            if (file == null)
-                return NotFound(new { error = $"Document with ID {id} not found" });
-
-            if (!string.IsNullOrEmpty(fileDto.Name) && file.Name != fileDto.Name)
-            {
-                var nameExists = await _context.Files.AnyAsync(d => d.Name == fileDto.Name && d.Id != id);
-                if (nameExists)
-                    return Conflict(new { error = "A document with this name already exists." });
-            }
-            
-            var validationResults = new List<ValidationResult>();
-            var validationContext = new ValidationContext(fileDto);
-            bool isValid = Validator.TryValidateObject(fileDto, validationContext, validationResults, true);
-            
-            if (!isValid)
-                return BadRequest(new { errors = validationResults.Select(v => v.ErrorMessage) });
-
-            if (!string.IsNullOrEmpty(fileDto.FilePath))
-            {
-                string newFullFilePath = fileDto.FilePath;
-                bool isDirectory = newFullFilePath.EndsWith(Path.DirectorySeparatorChar) || 
-                                   newFullFilePath.EndsWith('/');
-            
-                if (isDirectory)
-                {
-                    string fileName = fileDto.Name ?? file.Name;
-                    string fileType = fileDto.FileType ?? file.FileType;
-                    newFullFilePath = Path.Combine(newFullFilePath, fileName + fileType).Replace('\\', '/');
-                }
-                else
-                {
-                    newFullFilePath = newFullFilePath.Replace('\\', '/');
-                }
-            
-                string? directoryPath = Path.GetDirectoryName(newFullFilePath);
-                
-                if (!string.IsNullOrEmpty(directoryPath))
-                    Directory.CreateDirectory(directoryPath);
-            
-                if (file.FilePath != newFullFilePath)
-                {
-                    if (System.IO.File.Exists(file.FilePath))
-                    {
-                        System.IO.File.Move(file.FilePath, newFullFilePath);
-                    }
-                    else
-                    {
-                        await using var fileStream = System.IO.File.Create(newFullFilePath);
-                    }
-                    file.FilePath = newFullFilePath;
-                }
-            }
-        
-            if(fileDto.Name != null && file.Name != fileDto.Name)
-                file.Name = fileDto.Name;
-        
-            if(fileDto.FileType != null)
-                file.FileType = fileDto.FileType;
-        
-            file.TimeModified = DateTime.UtcNow;
-        
-            await _context.SaveChangesAsync();
-            return NoContent();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error updating file with ID {FileID}.", id);
-            return StatusCode(500, new { error = "An error occurred while updating the file." });
+            _logger.LogError(ex, "Error adding file to database.");
+            return StatusCode(500, new { error = "An error occurred while adding the file." });
         }
     }
 
@@ -249,7 +159,6 @@ public class FilesController : ControllerBase
             
             _context.Files.Remove(file);
             await _context.SaveChangesAsync();
-            
             return NoContent();
         }
         catch (Exception ex)
