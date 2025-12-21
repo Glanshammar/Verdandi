@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
+using System.IO.Compression;
 using Verdandi.API.Context;
 using Verdandi.API.DTO;
 using Verdandi.API.Entities;
@@ -256,5 +257,169 @@ public class FilesController : ControllerBase
             _logger.LogError(ex, "Error deleting document with ID {DocumentId}", id);
             return StatusCode(500, new { error = "An error occurred while deleting the document" });
         }
+    }
+    
+    // Download one or more documents by ID
+    [HttpPost("download")]
+    [ProducesResponseType(typeof(FileResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DownloadDocuments([FromBody] DownloadRequestDto downloadRequest)
+    {
+        try
+        {
+            if (downloadRequest.Ids is null || downloadRequest.Ids.Count == 0)
+                return BadRequest(new { error = "No document IDs provided" });
+
+            var files = await _context.Files
+                .Where(d => downloadRequest.Ids.Contains(d.Id))
+                .ToListAsync();
+
+            if (files.Count == 0)
+                return NotFound(new { error = "No documents found with the provided IDs" });
+
+            var foundIds = files.Select(d => d.Id).ToList();
+            var missingIds = downloadRequest.Ids.Except(foundIds).ToList();
+            
+            if (missingIds.Count > 0)
+            {
+                return NotFound(new { 
+                    error = $"Some documents not found", 
+                    missingIds = missingIds,
+                    foundCount = files.Count,
+                    requestedCount = downloadRequest.Ids.Count
+                });
+            }
+
+            var missingFiles = new List<FileInfoDto>();
+            var validFiles = new List<Files>();
+            
+            foreach (var file in files)
+            {
+                if (System.IO.File.Exists(file.FilePath))
+                    validFiles.Add(file);
+                else
+                {
+                    missingFiles.Add(new FileInfoDto
+                    {
+                        Id = file.Id,
+                        Name = file.Name,
+                        FilePath = file.FilePath
+                    });
+                }
+            }
+
+            if (missingFiles.Count > 0)
+            {
+                return NotFound(new { 
+                    error = "Some files were not found", 
+                    missingFiles,
+                    availableFiles = validFiles.Select(d => new { d.Id, d.Name })
+                });
+            }
+
+            if (validFiles.Count == 1)
+            {
+                var file = validFiles[0];
+                var fileName = Path.GetFileName(file.FilePath) ?? $"{file.Name}{file.FileType}";
+                var fileStream = new FileStream(file.FilePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+                var contentType = GetContentType(file.FileType);
+                return File(fileStream, contentType, fileName);
+            }
+
+            var zipFileName = $"files_{DateTime.UtcNow:yyyyMMdd_HHmmss}.zip";
+            
+            try
+            {
+                var memoryStream = new MemoryStream();
+    
+                await using (var zipArchive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
+                {
+                    var usedEntryNames = new HashSet<string>();
+        
+                    foreach (var file in validFiles)
+                    {
+                        var entryName = $"{file.Name}{file.FileType}";
+            
+                        if (usedEntryNames.Contains(entryName))
+                            entryName = $"{file.Id}_{entryName}";
+            
+                        usedEntryNames.Add(entryName);
+            
+                        var entry = zipArchive.CreateEntry(entryName, CompressionLevel.Optimal);
+                        await using var entryStream = await entry.OpenAsync();
+                        await using var fileStream = new FileStream(file.FilePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+                        await fileStream.CopyToAsync(entryStream);
+                    }
+                }
+    
+                memoryStream.Position = 0;
+                return File(memoryStream, "application/zip", zipFileName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating ZIP archive");
+                return StatusCode(500, new { error = "An error occurred while creating the ZIP archive" });
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error downloading files");
+            return StatusCode(500, new { error = "An error occurred while downloading files" });
+        }
+    }
+
+    // Download a single file by ID
+    [HttpGet("{id}/download")]
+    [ProducesResponseType(typeof(FileResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DownloadDocument(int id)
+    {
+        try
+        {
+            var file = await _context.Files.FindAsync(id);
+            
+            if (file == null)
+                return NotFound(new { error = $"File with ID {id} not found" });
+            
+            if (!System.IO.File.Exists(file.FilePath))
+            {
+                return NotFound(new { 
+                    error = $"File not found on disk", 
+                    file = new { file.Id, file.Name, file.FilePath }
+                });
+            }
+            
+            var fileName = Path.GetFileName(file.FilePath) ?? $"{file.Name}{file.FileType}";
+            var contentType = GetContentType(file.FileType);
+            var fileStream = new FileStream(file.FilePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            
+            return File(fileStream, contentType, fileName);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error downloading document with ID {DocumentId}", id);
+            return StatusCode(500, new { error = "An error occurred while downloading the document" });
+        }
+    }
+
+    private static string GetContentType(string fileType)
+    {
+        return fileType.ToLower() switch
+        {
+            ".txt" => "text/plain",
+            ".pdf" => "application/pdf",
+            ".doc" => "application/msword",
+            ".docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            ".xls" => "application/vnd.ms-excel",
+            ".xlsx" => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            ".jpg" or ".jpeg" => "image/jpeg",
+            ".png" => "image/png",
+            ".gif" => "image/gif",
+            ".mp3" => "audio/mpeg",
+            ".mp4" => "video/mp4",
+            ".zip" => "application/zip",
+            _ => "application/octet-stream"
+        };
     }
 }
