@@ -152,7 +152,7 @@ public class FilesController : ControllerBase
             var file = await _context.Files.FindAsync(id);
             
             if (file == null)
-                return NotFound(new { error = $"Document with ID {id} not found" });
+                return NotFound(new { error = $"File with ID {id} not found" });
             
             if (System.IO.File.Exists(file.FilePath))
                 System.IO.File.Delete(file.FilePath);
@@ -163,29 +163,29 @@ public class FilesController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error deleting document with ID {DocumentId}", id);
-            return StatusCode(500, new { error = "An error occurred while deleting the document" });
+            _logger.LogError(ex, "Error deleting file with ID {FileID}.", id);
+            return StatusCode(500, new { error = "An error occurred while deleting the file." });
         }
     }
     
-    // Download one or more documents by ID
+    // Download one or more files by ID
     [HttpPost("download")]
     [ProducesResponseType(typeof(FileResult), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> DownloadDocuments([FromBody] DownloadRequestDto downloadRequest)
+    public async Task<IActionResult> DownloadFiles([FromBody] DownloadRequestDto downloadRequest)
     {
         try
         {
             if (downloadRequest.Ids is null || downloadRequest.Ids.Count == 0)
-                return BadRequest(new { error = "No document IDs provided" });
+                return BadRequest(new { error = "No file IDs provided" });
 
             var files = await _context.Files
                 .Where(d => downloadRequest.Ids.Contains(d.Id))
                 .ToListAsync();
 
             if (files.Count == 0)
-                return NotFound(new { error = "No documents found with the provided IDs" });
+                return NotFound(new { error = "No files found with the provided IDs" });
 
             var foundIds = files.Select(d => d.Id).ToList();
             var missingIds = downloadRequest.Ids.Except(foundIds).ToList();
@@ -193,7 +193,7 @@ public class FilesController : ControllerBase
             if (missingIds.Count > 0)
             {
                 return NotFound(new { 
-                    error = $"Some documents not found", 
+                    error = $"Some files not found", 
                     missingIds = missingIds,
                     foundCount = files.Count,
                     requestedCount = downloadRequest.Ids.Count
@@ -282,7 +282,7 @@ public class FilesController : ControllerBase
     [HttpGet("{id}/download")]
     [ProducesResponseType(typeof(FileResult), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> DownloadDocument(int id)
+    public async Task<IActionResult> DownloadFile(int id)
     {
         try
         {
@@ -307,8 +307,8 @@ public class FilesController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error downloading document with ID {DocumentId}", id);
-            return StatusCode(500, new { error = "An error occurred while downloading the document" });
+            _logger.LogError(ex, "Error downloading file with ID {FileID}.", id);
+            return StatusCode(500, new { error = "An error occurred while downloading the file." });
         }
     }
 
