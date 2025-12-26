@@ -5,6 +5,7 @@ using System.IO.Compression;
 using Verdandi.API.Context;
 using Verdandi.API.DTO;
 using Verdandi.API.Entities;
+using Microsoft.AspNetCore.StaticFiles;
 
 namespace Verdandi.API.Controllers;
 
@@ -14,6 +15,8 @@ public class FilesController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
     private readonly ILogger<FilesController> _logger;
+    private readonly string _rootDirectory;
+    private readonly FileExtensionContentTypeProvider _contentTypeProvider = new();
 
     public FilesController(ApplicationDbContext context, ILogger<FilesController> logger, IConfiguration configuration)
     {
@@ -177,167 +180,107 @@ public class FilesController : ControllerBase
         }
     }
     
-    // Download one or more files by ID
     [HttpPost("download")]
-    [ProducesResponseType(typeof(FileResult), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> DownloadFiles([FromBody] DownloadRequestDto downloadRequest)
+    public async Task<IActionResult> DownloadFiles([FromBody] DownloadRequestDto request)
     {
-        try
-        {
-            if (downloadRequest.Ids is null || downloadRequest.Ids.Count == 0)
-                return BadRequest(new { error = "No file IDs provided" });
+        if (request.Ids is null || request.Ids.Count == 0)
+            return BadRequest(new { error = "No file IDs provided" });
 
-            var files = await _context.Files
-                .Where(d => downloadRequest.Ids.Contains(d.Id))
-                .ToListAsync();
+        var files = await _context.Files
+            .Where(f => request.Ids.Contains(f.Id))
+            .ToListAsync();
 
-            if (files.Count == 0)
-                return NotFound(new { error = "No files found with the provided IDs." });
+        if (files.Count == 0)
+            return NotFound(new { error = "No files found." });
 
-            var foundIds = files.Select(d => d.Id).ToList();
-            var missingIds = downloadRequest.Ids.Except(foundIds).ToList();
-            
-            if (missingIds.Count > 0)
-            {
-                return NotFound(new { 
-                    error = "Some files not found.", 
-                    missingIds,
-                    foundCount = files.Count,
-                    requestedCount = downloadRequest.Ids.Count
-                });
-            }
+        var (validFiles, missingFiles) = PartitionValidFiles(files);
 
-            var missingFiles = new List<FileInfoDto>();
-            var validFiles = new List<Files>();
-            
-            foreach (var file in files)
-            {
-                if (System.IO.File.Exists(file.FilePath))
-                    validFiles.Add(file);
-                else
-                {
-                    missingFiles.Add(new FileInfoDto
-                    {
-                        Id = file.Id,
-                        Name = file.Name,
-                        FilePath = file.FilePath
-                    });
-                }
-            }
+        if (missingFiles.Count > 0)
+            return NotFound(new { error = "Some files were not found.", missingFiles });
 
-            if (missingFiles.Count > 0)
-            {
-                return NotFound(new { 
-                    error = "Some files were not found.", 
-                    missingFiles,
-                    availableFiles = validFiles.Select(d => new { d.Id, d.Name })
-                });
-            }
+        if (validFiles.Count == 1)
+            return GetSingleFileResult(validFiles[0]);
 
-            if (validFiles.Count == 1)
-            {
-                var file = validFiles[0];
-                var fileName = Path.GetFileName(file.FilePath) ?? $"{file.Name}{file.FileType}";
-                var fileStream = new FileStream(file.FilePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-                var contentType = GetContentType(file.FileType);
-                return File(fileStream, contentType, fileName);
-            }
-
-            var zipFileName = $"files_{DateTime.UtcNow:yyyyMMdd_HHmmss}.zip";
-            
-            try
-            {
-                await using var memoryStream = new MemoryStream();
-                
-                await using (var zipArchive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
-                {
-                    var usedEntryNames = new HashSet<string>();
-        
-                    foreach (var file in validFiles)
-                    {
-                        var entryName = $"{file.Name}{file.FileType}";
-            
-                        if (usedEntryNames.Contains(entryName))
-                            entryName = $"{file.Id}_{entryName}";
-            
-                        usedEntryNames.Add(entryName);
-            
-                        var entry = zipArchive.CreateEntry(entryName, CompressionLevel.Optimal);
-                        await using var entryStream = await entry.OpenAsync();
-                        await using var fileStream = new FileStream(file.FilePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-                        await fileStream.CopyToAsync(entryStream);
-                    }
-                }
-    
-                memoryStream.Position = 0;
-                return File(memoryStream, "application/zip", zipFileName);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error creating ZIP archive.");
-                return StatusCode(500, new { error = "An error occurred while creating the ZIP archive." });
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error downloading files.");
-            return StatusCode(500, new { error = "An error occurred while downloading files." });
-        }
+        return await GetZipFileResult(validFiles);
     }
 
-    // Download a single file by ID
     [HttpGet("{id}/download")]
-    [ProducesResponseType(typeof(FileResult), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DownloadFile(int id)
     {
+        var file = await _context.Files.FindAsync(id);
+
+        if (file == null)
+            return NotFound(new { error = $"File with ID {id} not found." });
+
+        if (!System.IO.File.Exists(file.FilePath))
+            return NotFound(new { error = "File not found on disk.", file });
+
+        return GetSingleFileResult(file);
+    }
+
+    private static (List<Files> validFiles, List<FileInfoDto> missingFiles)
+        PartitionValidFiles(IEnumerable<Files> files)
+    {
+        var valid = new List<Files>();
+        var missing = new List<FileInfoDto>();
+
+        foreach (var file in files)
+        {
+            if (System.IO.File.Exists(file.FilePath))
+                valid.Add(file);
+            else
+                missing.Add(new FileInfoDto
+                {
+                    Id = file.Id,
+                    Name = file.Name,
+                    FilePath = file.FilePath
+                });
+        }
+
+        return (valid, missing);
+    }
+
+    private FileResult GetSingleFileResult(Files file)
+    {
+        var fileName = Path.GetFileName(file.FilePath);
+        var stream = new FileStream(file.FilePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+
+        if (!_contentTypeProvider.TryGetContentType(file.FilePath, out var contentType))
+            contentType = "application/octet-stream";
+
+        return File(stream, contentType, fileName);  // MVC disposes it after streaming
+    }
+
+    private async Task<IActionResult> GetZipFileResult(IEnumerable<Files> files)
+    {
         try
         {
-            var file = await _context.Files.FindAsync(id);
-            
-            if (file == null)
-                return NotFound(new { error = $"File with ID {id} not found." });
-            
-            if (!System.IO.File.Exists(file.FilePath))
+            var memoryStream = new MemoryStream();
+            await using (var zipArchive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
             {
-                return NotFound(new { 
-                    error = $"File not found on disk.", 
-                    file = new { file.Id, file.Name, file.FilePath }
-                });
+                var usedNames = new HashSet<string>();
+
+                foreach (var file in files)
+                {
+                    var entryName = $"{file.Name}{file.FileType}";
+                    if (!usedNames.Add(entryName))
+                        entryName = $"{file.Id}_{entryName}";
+
+                    var entry = zipArchive.CreateEntry(entryName, CompressionLevel.Optimal);
+
+                    await using var entryStream = await entry.OpenAsync();
+                    await using var fileStream = new FileStream(file.FilePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+                    await fileStream.CopyToAsync(entryStream);
+                }
             }
             
-            var fileName = Path.GetFileName(file.FilePath) ?? $"{file.Name}{file.FileType}";
-            var contentType = GetContentType(file.FileType);
-            var fileStream = new FileStream(file.FilePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-            
-            return File(fileStream, contentType, fileName);
+            memoryStream.Position = 0;
+            return File(memoryStream, "application/zip", $"files_{DateTime.UtcNow:yyyyMMdd_HHmmss}.zip");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error downloading file with ID {FileID}.", id);
-            return StatusCode(500, new { error = "An error occurred while downloading the file." });
+            _logger.LogError(ex, "Error creating ZIP archive.");
+            return StatusCode(500, new { error = "An error occurred while creating the ZIP archive." });
         }
-    }
-
-    private static string GetContentType(string fileType)
-    {
-        return fileType.ToLower() switch
-        {
-            ".txt" => "text/plain",
-            ".pdf" => "application/pdf",
-            ".doc" => "application/msword",
-            ".docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            ".xls" => "application/vnd.ms-excel",
-            ".xlsx" => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            ".jpg" or ".jpeg" => "image/jpeg",
-            ".png" => "image/png",
-            ".gif" => "image/gif",
-            ".mp3" => "audio/mpeg",
-            ".mp4" => "video/mp4",
-            ".zip" => "application/zip",
-            _ => "application/octet-stream"
-        };
     }
 }
