@@ -30,5 +30,5 @@ public class Files
     [MinLength(2)]
     [MaxLength(20)]
     [Column("file_type")]
-    public string FileType { get; set; } = ".file";
+    public string FileType { get; set; } = string.Empty;
 }

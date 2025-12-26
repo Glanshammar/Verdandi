@@ -2,6 +2,16 @@
 
 namespace Verdandi.API.DTO;
 
+public static class FilePaths
+{
+    public static bool IsPathAllowed(string path, string rootDirectory)
+    {
+        var fullPath = Path.GetFullPath(path);
+        var root = Path.GetFullPath(rootDirectory);
+        return fullPath.StartsWith(root, StringComparison.OrdinalIgnoreCase);
+    }
+}
+
 public class FileDto
 {
     [Required]

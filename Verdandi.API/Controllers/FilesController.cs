@@ -15,10 +15,13 @@ public class FilesController : ControllerBase
     private readonly ApplicationDbContext _context;
     private readonly ILogger<FilesController> _logger;
 
-    public FilesController(ApplicationDbContext context, ILogger<FilesController> logger)
+    public FilesController(ApplicationDbContext context, ILogger<FilesController> logger, IConfiguration configuration)
     {
         _context = context;
         _logger = logger;
+        _rootDirectory = configuration["FileStorage:RootPath"] ?? Path.Combine(Directory.GetCurrentDirectory(), "uploads");
+        
+        Directory.CreateDirectory(_rootDirectory);
     }
 
     // Get all/selective files
@@ -34,8 +37,11 @@ public class FilesController : ControllerBase
             var query = _context.Files.AsNoTracking();
             
             if (!string.IsNullOrEmpty(search))
-                query = query.Where(d => EF.Functions.Like(d.Name, $"%{search}%") || 
-                                         EF.Functions.Like(d.FilePath, $"%{search}%"));
+            {
+                var sanitizedSearch = search.Replace("[", "[[]").Replace("%", "[%]");
+                query = query.Where(d => EF.Functions.Like(d.Name, $"%{sanitizedSearch}%") || 
+                                         EF.Functions.Like(d.FilePath, $"%{sanitizedSearch}%"));
+            }
             
             if (!string.IsNullOrEmpty(fileType))
             {
@@ -115,6 +121,9 @@ public class FilesController : ControllerBase
             
             if (!isValid)
                 return BadRequest(new { errors = validationResults.Select(v => v.ErrorMessage) });
+            
+            if (!FilePaths.IsPathAllowed(fileDto.FilePath, _rootDirectory))
+                return BadRequest(new { error = "File path is not within allowed directory." });
 
             var file = new Files
             {
@@ -185,7 +194,7 @@ public class FilesController : ControllerBase
                 .ToListAsync();
 
             if (files.Count == 0)
-                return NotFound(new { error = "No files found with the provided IDs" });
+                return NotFound(new { error = "No files found with the provided IDs." });
 
             var foundIds = files.Select(d => d.Id).ToList();
             var missingIds = downloadRequest.Ids.Except(foundIds).ToList();
@@ -193,8 +202,8 @@ public class FilesController : ControllerBase
             if (missingIds.Count > 0)
             {
                 return NotFound(new { 
-                    error = $"Some files not found", 
-                    missingIds = missingIds,
+                    error = "Some files not found.", 
+                    missingIds,
                     foundCount = files.Count,
                     requestedCount = downloadRequest.Ids.Count
                 });
@@ -221,7 +230,7 @@ public class FilesController : ControllerBase
             if (missingFiles.Count > 0)
             {
                 return NotFound(new { 
-                    error = "Some files were not found", 
+                    error = "Some files were not found.", 
                     missingFiles,
                     availableFiles = validFiles.Select(d => new { d.Id, d.Name })
                 });
@@ -240,8 +249,8 @@ public class FilesController : ControllerBase
             
             try
             {
-                var memoryStream = new MemoryStream();
-    
+                await using var memoryStream = new MemoryStream();
+                
                 await using (var zipArchive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
                 {
                     var usedEntryNames = new HashSet<string>();
@@ -267,14 +276,14 @@ public class FilesController : ControllerBase
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creating ZIP archive");
-                return StatusCode(500, new { error = "An error occurred while creating the ZIP archive" });
+                _logger.LogError(ex, "Error creating ZIP archive.");
+                return StatusCode(500, new { error = "An error occurred while creating the ZIP archive." });
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error downloading files");
-            return StatusCode(500, new { error = "An error occurred while downloading files" });
+            _logger.LogError(ex, "Error downloading files.");
+            return StatusCode(500, new { error = "An error occurred while downloading files." });
         }
     }
 
@@ -289,12 +298,12 @@ public class FilesController : ControllerBase
             var file = await _context.Files.FindAsync(id);
             
             if (file == null)
-                return NotFound(new { error = $"File with ID {id} not found" });
+                return NotFound(new { error = $"File with ID {id} not found." });
             
             if (!System.IO.File.Exists(file.FilePath))
             {
                 return NotFound(new { 
-                    error = $"File not found on disk", 
+                    error = $"File not found on disk.", 
                     file = new { file.Id, file.Name, file.FilePath }
                 });
             }
