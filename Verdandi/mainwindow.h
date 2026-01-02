@@ -2,6 +2,9 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QPluginLoader>
+#include <QDir>
+#include <QStatusBar>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -16,6 +19,11 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+
+private slots:
+    void loadAllPlugins(const QString &pluginDir);
+    void on_actionExit_triggered();
+    void onPluginMessage(const QString &msg);
 
 private:
     Ui::MainWindow *ui;
