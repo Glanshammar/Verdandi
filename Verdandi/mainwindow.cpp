@@ -2,65 +2,95 @@
 #include "./ui_mainwindow.h"
 #include <QDebug>
 #include <QLibrary>
+#include <QMessageBox>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    loadAllPlugins("Plugins");
+
+    setupConnections();
+    loadPlugins();
 }
 
 MainWindow::~MainWindow()
 {
+    for (QPluginLoader* loader : pluginLoaders) {
+        loader->unload();
+        delete loader;
+    }
+
     delete ui;
 }
 
-void MainWindow::loadAllPlugins(const QString &pluginDir)
+void MainWindow::setupConnections()
 {
-    QDir dir(pluginDir);
-    if (!dir.exists()) {
-        qDebug() << "Plugin directory does not exist:" << pluginDir;
-        return;
-    }
+    // connect(ui->buttonTest, &QPushButton::clicked,
+    //        this, &MainWindow::onButtonClicked);
+    qDebug() << "No connections setup.";
+}
 
-    QStringList filters;
-#ifdef Q_OS_WIN
-    filters << "*.dll";
-#elif defined(Q_OS_MAC)
-    filters << "*.dylib" << "*.so";
-#elif
-    filters << "*.so";
+void MainWindow::onButtonClicked()
+{
+    // Call onButtonClicked on all loaded plugins
+    for (PluginInterface* plugin : loadedPlugins) {
+        // plugin->onButtonClicked(ui->buttonTest);
+    }
+}
+
+void MainWindow::loadPlugins()
+{
+    QDir pluginsDir(qApp->applicationDirPath());
+
+#if defined(Q_OS_MAC)
+    pluginsDir.cdUp();
+    pluginsDir.cd("PlugIns");
+#elif defined(Q_OS_LINUX)
+    pluginsDir.cd("plugins");
+#elif defined(Q_OS_WIN)
+    pluginsDir.cd("plugins");
 #endif
 
-    for (const QString &file : dir.entryList(filters, QDir::Files)) {
-        QString pluginPath = dir.absoluteFilePath(file);
-        qDebug() << "Loading plugin:" << pluginPath;
+    qDebug() << "Looking for plugins in:" << pluginsDir.absolutePath();
 
-        QPluginLoader loader(pluginPath);
-        QObject *plugin = loader.instance();
+    foreach (QString fileName, pluginsDir.entryList(QDir::Files)) {
+#if defined(Q_OS_WIN)
+        if (!fileName.endsWith(".dll")) continue;
+#elif defined(Q_OS_MAC)
+        if (!fileName.endsWith(".dylib") && !fileName.endsWith(".so")) continue;
+#elif defined(Q_OS_LINUX)
+        if (!fileName.endsWith(".so")) continue;
+#endif
+
+        QPluginLoader* loader = new QPluginLoader(pluginsDir.absoluteFilePath(fileName));
+        QObject* plugin = loader->instance();
 
         if (plugin) {
-            QObject::connect(plugin, SIGNAL(statusMessage(QString)),
-                             this, SLOT(onPluginMessage(QString)));
-
-            QMetaObject::invokeMethod(plugin, "initialize",
-                                      Q_ARG(QObject*, this));
-            qDebug() << "Plugin loaded successfully:" << file;
+            PluginInterface* pluginInterface = qobject_cast<PluginInterface*>(plugin);
+            if (pluginInterface) {
+                pluginLoaders.append(loader);
+                loadedPlugins.append(pluginInterface);
+                qDebug() << "Loaded plugin:" << pluginInterface->pluginName()
+                         << "from:" << fileName;
+            } else {
+                qDebug() << "Plugin doesn't implement PluginInterface:" << fileName;
+                delete loader;
+            }
         } else {
-            qDebug() << "Failed to load plugin:" << file
-                     << "Error:" << loader.errorString();
+            qDebug() << "Failed to load plugin:" << fileName
+                     << "Error:" << loader->errorString();
+            delete loader;
         }
+    }
+
+    if (loadedPlugins.isEmpty()) {
+        qDebug() << "No plugins loaded!";
+        qDebug() << "Make sure the plugin is built and copied to the plugins directory.";
     }
 }
 
 void MainWindow::on_actionExit_triggered()
 {
     QApplication::quit();
-}
-
-void MainWindow::onPluginMessage(const QString &msg)
-{
-    qDebug() << "Plugin message:" << msg;
-    statusBar()->showMessage(msg, 3000);
 }

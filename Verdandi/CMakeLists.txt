@@ -23,6 +23,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(Verdandi
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
+        plugininterface.h
     )
 else()
     add_executable(Verdandi ${PROJECT_SOURCES})
@@ -55,3 +56,10 @@ install(TARGETS Verdandi
 if(QT_VERSION_MAJOR EQUAL 6)
     qt_finalize_executable(Verdandi)
 endif()
+
+add_subdirectory(PluginExample)
+add_custom_command(TARGET Verdandi POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_FILE_DIR:PluginExample>/plugins
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:PluginExample> $<TARGET_FILE_DIR:PluginExample>/plugins
+    COMMENT "Copying plugin to plugins directory"
+)
