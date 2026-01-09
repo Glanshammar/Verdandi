@@ -14,10 +14,5 @@ class PLUGINEXAMPLE_EXPORT PluginExample:
 
 public:
     PluginExample();
-
-    QString pluginName() const override;
-    void initialize() override;
-    void onButtonClicked(QPushButton* button) override;
-    void updateLabel(QLabel* label) override;
 };
 #endif // PLUGINEXAMPLE_H

@@ -22,16 +22,9 @@ public:
     ~MainWindow();
 
 private slots:
-    void loadAllPlugins(const QString &pluginDir);
     void on_actionExit_triggered();
-    void onPluginMessage(const QString &msg);
-    void onButtonClicked();
 
 private:
     Ui::MainWindow *ui;
-    void loadPlugins();
-    void setupConnections();
-    QList<QPluginLoader*> pluginLoaders;
-    QList<PluginInterface*> loadedPlugins;
 };
 #endif // MAINWINDOW_H
