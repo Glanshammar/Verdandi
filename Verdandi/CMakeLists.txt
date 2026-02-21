@@ -9,8 +9,8 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets Qml Quick)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Qml Quick)
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets Qml Quick Network)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Qml Quick Network)
 
 set(PROJECT_SOURCES
         main.cpp
@@ -23,7 +23,8 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(Verdandi
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
-        plugininterface.h
+        apiclient.h apiclient.cpp
+
     )
 else()
     add_executable(Verdandi ${PROJECT_SOURCES})
@@ -33,7 +34,10 @@ target_link_libraries(Verdandi PRIVATE
     Qt${QT_VERSION_MAJOR}::Widgets
     Qt${QT_VERSION_MAJOR}::Qml
     Qt${QT_VERSION_MAJOR}::Quick
+    Qt${QT_VERSION_MAJOR}::Network
+    Qt${QT_VERSION_MAJOR}::Core
 )
+target_link_libraries(Verdandi PRIVATE Qt${QT_VERSION_MAJOR}::Core)
 
 if(${QT_VERSION} VERSION_LESS 6.1.0)
   set(BUNDLE_ID_OPTION MACOSX_BUNDLE_GUI_IDENTIFIER com.example.Verdandi)
@@ -57,9 +61,8 @@ if(QT_VERSION_MAJOR EQUAL 6)
     qt_finalize_executable(Verdandi)
 endif()
 
-add_subdirectory(PluginExample)
-add_custom_command(TARGET Verdandi POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_FILE_DIR:PluginExample>/plugins
-    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:PluginExample> $<TARGET_FILE_DIR:PluginExample>/plugins
-    COMMENT "Copying plugin to plugins directory"
-)
+# add_custom_command(TARGET Verdandi POST_BUILD
+#     COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_FILE_DIR:PluginExample>/plugins
+#     COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:PluginExample> $<TARGET_FILE_DIR:PluginExample>/plugins
+#     COMMENT "Copying plugin to plugins directory"
+#)

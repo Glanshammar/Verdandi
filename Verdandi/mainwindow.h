@@ -2,16 +2,17 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <QPluginLoader>
-#include <QDir>
-#include <QStatusBar>
-#include "plugininterface.h"
+#include <QString>
+#include <QVariant>
+#include <QPair>
+#include "apiclient.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
 class MainWindow;
 }
 QT_END_NAMESPACE
+
 
 class MainWindow : public QMainWindow
 {
@@ -22,9 +23,27 @@ public:
     ~MainWindow();
 
 private slots:
+    void onStatusReceived(const QPair<QString, QString> &pair);
+    void onStatusError(const QString &error);
+
+    void onPostResponse(const QByteArray &response);
+    void onPostError(const QString &error);
+
     void on_actionExit_triggered();
+
+    void on_buttonApiTest_clicked();
+
+    void on_buttonApiTest2_clicked();
+
+    void on_buttonApiPost_clicked();
 
 private:
     Ui::MainWindow *ui;
+    ApiClient *api;
+    void updateTokenDisplay();
+
+signals:
+    void apiResponseReceived(const QJsonDocument& response);
+    void apiErrorReceived(const QString& error);
 };
 #endif // MAINWINDOW_H
