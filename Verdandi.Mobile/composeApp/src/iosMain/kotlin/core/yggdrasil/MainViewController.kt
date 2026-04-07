@@ -1,4 +1,4 @@
-package core.verdandi
+package core.yggdrasil
 
 import androidx.compose.ui.window.ComposeUIViewController
 

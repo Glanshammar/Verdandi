@@ -1,4 +1,4 @@
-package core.verdandi
+package core.yggdrasil
 
 import kotlin.test.Test
 import kotlin.test.assertEquals

@@ -10,7 +10,7 @@ plugins {
 kotlin {
     androidTarget {
         compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_11)
+            jvmTarget.set(JvmTarget.JVM_21)
         }
     }
     
@@ -46,7 +46,7 @@ kotlin {
 }
 
 android {
-    namespace = "core.verdandi"
+    namespace = "core.yggdrasil"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {

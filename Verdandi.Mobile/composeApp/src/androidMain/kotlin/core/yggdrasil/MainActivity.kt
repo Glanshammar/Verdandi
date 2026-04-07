@@ -1,4 +1,4 @@
-package core.verdandi
+package core.yggdrasil
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity

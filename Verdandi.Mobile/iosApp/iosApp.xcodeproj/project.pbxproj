@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		9219A2606EE6A831B5FA3705 /* verdandi.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = verdandi.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		9219A2606EE6A831B5FA3705 /* yggdrasil.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = yggdrasil.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -59,7 +59,7 @@
 		FEE732E6E94986AA2F9C3F70 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				9219A2606EE6A831B5FA3705 /* verdandi.app */,
+				9219A2606EE6A831B5FA3705 /* yggdrasil.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";

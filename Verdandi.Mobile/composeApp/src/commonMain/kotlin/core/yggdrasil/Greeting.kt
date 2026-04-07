@@ -1,4 +1,4 @@
-package core.verdandi
+package core.yggdrasil
 
 class Greeting {
     private val platform = getPlatform()

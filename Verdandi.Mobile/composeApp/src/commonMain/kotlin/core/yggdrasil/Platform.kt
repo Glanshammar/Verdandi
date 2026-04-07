@@ -1,4 +1,4 @@
-package core.verdandi
+package core.yggdrasil
 
 interface Platform {
     val name: String

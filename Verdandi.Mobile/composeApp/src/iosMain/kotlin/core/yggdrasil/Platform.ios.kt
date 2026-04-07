@@ -1,4 +1,4 @@
-package core.verdandi
+package core.yggdrasil
 
 import platform.UIKit.UIDevice
 
