@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Verdandi.API.DTO;
+namespace Yggdrasil.API.DTO;
 
 public class GoalDto
 {

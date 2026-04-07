@@ -2,7 +2,7 @@
 
 #nullable disable
 
-namespace Verdandi.API.Migrations
+namespace Yggdrasil.API.Migrations
 {
     /// <inheritdoc />
     public partial class FileNameLength : Migration

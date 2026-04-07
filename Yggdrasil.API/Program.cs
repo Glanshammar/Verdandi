@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using Verdandi.API.Context;
+using Yggdrasil.API.Context;
 
 var builder = WebApplication.CreateBuilder(args);
 

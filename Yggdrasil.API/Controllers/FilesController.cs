@@ -2,12 +2,12 @@
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.IO.Compression;
-using Verdandi.API.Context;
-using Verdandi.API.DTO;
-using Verdandi.API.Entities;
 using Microsoft.AspNetCore.StaticFiles;
+using Yggdrasil.API.Context;
+using Yggdrasil.API.DTO;
+using Yggdrasil.API.Entities;
 
-namespace Verdandi.API.Controllers;
+namespace Yggdrasil.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]

@@ -6,7 +6,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json.Serialization;
 
-namespace Verdandi.API.Entities;
+namespace Yggdrasil.API.Entities;
 
 public class User
 {

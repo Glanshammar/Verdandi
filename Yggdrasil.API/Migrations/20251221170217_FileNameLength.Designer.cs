@@ -5,15 +5,15 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-using Verdandi.API.Context;
+using Yggdrasil.API.Context;
 
 #nullable disable
 
-namespace Verdandi.API.Migrations
+namespace Yggdrasil.API.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251220125616_DocsToFiles")]
-    partial class DocsToFiles
+    [Migration("20251221170217_FileNameLength")]
+    partial class FileNameLength
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,7 +25,7 @@ namespace Verdandi.API.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Verdandi.API.Entities.Files", b =>
+            modelBuilder.Entity("Yggdrasil.API.Entities.Files", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -48,8 +48,8 @@ namespace Verdandi.API.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
                         .HasColumnName("name");
 
                     b.Property<DateTime>("TimeCreated")
@@ -65,7 +65,7 @@ namespace Verdandi.API.Migrations
                     b.ToTable("Files");
                 });
 
-            modelBuilder.Entity("Verdandi.API.Entities.Goal", b =>
+            modelBuilder.Entity("Yggdrasil.API.Entities.Goal", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -91,7 +91,7 @@ namespace Verdandi.API.Migrations
                     b.ToTable("Goals");
                 });
 
-            modelBuilder.Entity("Verdandi.API.Entities.GoalTask", b =>
+            modelBuilder.Entity("Yggdrasil.API.Entities.GoalTask", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -114,7 +114,7 @@ namespace Verdandi.API.Migrations
                     b.ToTable("GoalTasks", (string)null);
                 });
 
-            modelBuilder.Entity("Verdandi.API.Entities.Task", b =>
+            modelBuilder.Entity("Yggdrasil.API.Entities.Task", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -137,7 +137,7 @@ namespace Verdandi.API.Migrations
                     b.ToTable("Tasks");
                 });
 
-            modelBuilder.Entity("Verdandi.API.Entities.User", b =>
+            modelBuilder.Entity("Yggdrasil.API.Entities.User", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -173,15 +173,15 @@ namespace Verdandi.API.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("Verdandi.API.Entities.GoalTask", b =>
+            modelBuilder.Entity("Yggdrasil.API.Entities.GoalTask", b =>
                 {
-                    b.HasOne("Verdandi.API.Entities.Goal", "Goal")
+                    b.HasOne("Yggdrasil.API.Entities.Goal", "Goal")
                         .WithMany()
                         .HasForeignKey("GoalId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Verdandi.API.Entities.Task", "Task")
+                    b.HasOne("Yggdrasil.API.Entities.Task", "Task")
                         .WithMany()
                         .HasForeignKey("TaskId")
                         .OnDelete(DeleteBehavior.Cascade)

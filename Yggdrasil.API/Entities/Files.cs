@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Verdandi.API.Entities;
+namespace Yggdrasil.API.Entities;
 
 public class Files
 {

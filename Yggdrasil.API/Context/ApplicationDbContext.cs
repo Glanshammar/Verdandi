@@ -1,10 +1,11 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore;
-using Verdandi.API.Entities;
 using DotNetEnv;
-using Task = Verdandi.API.Entities.Task;
+using Yggdrasil.API.Entities;
+using Entities_Task = Yggdrasil.API.Entities.Task;
+using Task = Yggdrasil.API.Entities.Task;
 
-namespace Verdandi.API.Context;
+namespace Yggdrasil.API.Context;
 
 public partial class ApplicationDbContext : DbContext
 {
@@ -20,7 +21,7 @@ public partial class ApplicationDbContext : DbContext
     public DbSet<User> Users => Set<User>();
     public DbSet<Files> Files => Set<Files>();
     public DbSet<Goal> Goals => Set<Goal>();
-    public DbSet<Task> Tasks => Set<Task>();
+    public DbSet<Entities_Task> Tasks => Set<Entities_Task>();
     public DbSet<GoalTask> GoalTasks => Set<GoalTask>();
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
