@@ -7,6 +7,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.unit.dp
+import androidx.compose.material3.PrimaryTabRow
 
 data class Tab(
     val title: String? = null,
@@ -22,7 +23,7 @@ fun TabsComponent(
     var currentTabIndex by remember { mutableStateOf(selectedTabIndex) }
 
     Column(Modifier.fillMaxSize()) {
-        TabRow(selectedTabIndex = currentTabIndex) {
+        PrimaryTabRow(selectedTabIndex = currentTabIndex) {
             tabs.forEachIndexed { index, tab ->
                 Tab(
                     selected = currentTabIndex == index,

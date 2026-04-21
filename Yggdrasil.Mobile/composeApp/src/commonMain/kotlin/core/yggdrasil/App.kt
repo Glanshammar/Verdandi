@@ -12,6 +12,7 @@ import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.painterResource
 import yggdrasil.composeapp.generated.resources.Res
 import yggdrasil.composeapp.generated.resources.*
+import core.yggdrasil.content.*
 
 @Composable
 @Preview
@@ -22,22 +23,17 @@ fun App() {
         Tab(
             title = "Home",
             icon = painterResource(Res.drawable.house),
-            content = { Text("Home screen") }
+            content = { HomeTab() }
         ),
         Tab(
             title = "Profile",
             icon = painterResource(Res.drawable.user),
-            content = {
-                Column {
-                    Text("Profile")
-                    AppButton(onClick = { clickCount++ }, painter = painterResource(Res.drawable.yggdrasil))
-                }
-            }
+            content = { ProfileTab(clickCount) { clickCount++ } }
         ),
         Tab(
             title = "Settings",
             icon = painterResource(Res.drawable.settings),
-            content = { Text("Settings") }
+            content = { SettingsTab() }
         )
     )
 
@@ -52,7 +48,7 @@ fun App() {
                 size = 64.dp
             )
 
-            androidx.compose.material3.Text(
+            Text(
                 text = "Clicks: $clickCount",
                 style = MaterialTheme.typography.bodyLarge
             )
