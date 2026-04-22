@@ -1,4 +1,4 @@
-package core.yggdrasil.content
+package core.yggdrasil.views
 
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
