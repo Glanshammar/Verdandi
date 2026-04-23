@@ -13,6 +13,9 @@ import org.jetbrains.compose.resources.painterResource
 import yggdrasil.composeapp.generated.resources.Res
 import yggdrasil.composeapp.generated.resources.*
 import core.yggdrasil.content.*
+import core.yggdrasil.views.HomeTab
+import core.yggdrasil.views.ProfileTab
+import core.yggdrasil.views.SettingsTab
 
 @Composable
 @Preview
@@ -38,22 +41,24 @@ fun App() {
     )
 
     MaterialTheme {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.fillMaxSize()
-        ) {
-            AppButton(
-                onClick = { clickCount++ },
-                painter = painterResource(Res.drawable.yggdrasil),
-                size = 64.dp
-            )
+        SidebarNavDrawer {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                AppButton(
+                    onClick = { clickCount++ },
+                    painter = painterResource(Res.drawable.yggdrasil),
+                    size = 64.dp
+                )
 
-            Text(
-                text = "Clicks: $clickCount",
-                style = MaterialTheme.typography.bodyLarge
-            )
+                Text(
+                    text = "Clicks: $clickCount",
+                    style = MaterialTheme.typography.bodyLarge
+                )
 
-            TabsComponent(tabs=tabs)
+                TabsComponent(tabs = tabs)
+            }
         }
     }
 }
