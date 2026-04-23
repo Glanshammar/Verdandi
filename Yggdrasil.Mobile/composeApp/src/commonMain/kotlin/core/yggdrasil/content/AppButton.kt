@@ -1,4 +1,4 @@
-package core.yggdrasil
+package core.yggdrasil.content
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
