@@ -38,6 +38,8 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtimeCompose)
             implementation(libs.compose.materialIconsCore)
             implementation(libs.compose.materialIconsExtended)
+            implementation(libs.compose.navigation)
+            implementation(libs.kotlin.test)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -55,6 +57,7 @@ extensions.configure<ApplicationExtension> {
     defaultConfig {
         applicationId = "core.yggdrasil"
         minSdk = libs.versions.android.minSdk.get().toInt()
+        //noinspection OldTargetApi
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
         versionName = "1.0"
