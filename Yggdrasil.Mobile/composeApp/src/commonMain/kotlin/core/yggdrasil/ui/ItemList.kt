@@ -1,10 +1,11 @@
 package core.yggdrasil.ui
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -17,12 +18,14 @@ import org.jetbrains.compose.resources.painterResource
 import yggdrasil.composeapp.generated.resources.Res
 import yggdrasil.composeapp.generated.resources.yggdrasil
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ItemList(viewModel: ItemListViewModel = viewModel()) {
+fun ItemList(
+    modifier: Modifier = Modifier,
+    viewModel: ItemListViewModel = viewModel()
+) {
     val items by viewModel.items.collectAsState()
 
-    LazyColumn {
+    LazyColumn(modifier = modifier) {
         items(items, key = { it.id }) { item ->
             ListItem(
                 headlineContent = { Text(item.title) },
@@ -30,12 +33,17 @@ fun ItemList(viewModel: ItemListViewModel = viewModel()) {
                 leadingContent = {
                     Image(
                         painterResource(Res.drawable.yggdrasil),
-                        contentDescription = null,
-                        modifier = Modifier.size(120.dp, 80.dp)
+                        contentDescription = "Item icon",
+                        modifier = Modifier.size(56.dp)
                     )
                 },
-                modifier = Modifier.clickable {
-                    viewModel.deleteItem(item.id)
+                trailingContent = {
+                    IconButton(onClick = { viewModel.deleteItem(item.id) }) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Delete item ${item.title}"
+                        )
+                    }
                 }
             )
         }

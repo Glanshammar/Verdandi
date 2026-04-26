@@ -12,6 +12,10 @@ import yggdrasil.composeapp.generated.resources.yggdrasil
 fun ProfileTab(clickCount: Int, onClickCount: () -> Unit) {
     Column {
         Text("Profile details (Clicks: $clickCount)")
-        AppButton(onClick = onClickCount, painter = painterResource(Res.drawable.yggdrasil))
+        AppButton(
+            onClick = onClickCount,
+            painter = painterResource(Res.drawable.yggdrasil),
+            contentDescription = "Yggdrasil button"
+        )
     }
 }

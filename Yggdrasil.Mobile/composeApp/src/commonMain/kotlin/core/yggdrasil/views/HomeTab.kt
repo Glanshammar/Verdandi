@@ -73,6 +73,6 @@ fun HomeTab() {
             }
         }
 
-        ItemList()
+        ItemList(modifier = Modifier.weight(1f))
     }
 }

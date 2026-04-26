@@ -1,6 +1,7 @@
 package core.yggdrasil.ui
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -21,8 +22,9 @@ import androidx.compose.ui.unit.dp
 fun AppButton(
     onClick: () -> Unit,
     painter: Painter,
-    size: Dp = 64.dp,
+    contentDescription: String? = null,
     modifier: Modifier = Modifier,
+    size: Dp = 64.dp,
     enabled: Boolean = true,
     shape: Shape = RectangleShape,
 ) {
@@ -30,19 +32,20 @@ fun AppButton(
 
     Box(
         modifier = modifier
-            .size(size + 10.dp)
+            .size(size + 16.dp)
             .clip(shape)
             .background(Color.Transparent)
             .clickable(
                 onClick = onClick,
                 enabled = enabled,
-                interactionSource = interactionSource
+                interactionSource = interactionSource,
+                indication = LocalIndication.current
             ),
         contentAlignment = Alignment.Center
     ) {
         Image(
             painter = painter,
-            contentDescription = null,
+            contentDescription = contentDescription,
             modifier = Modifier.size(size)
         )
     }
