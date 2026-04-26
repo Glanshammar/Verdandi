@@ -19,7 +19,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import core.yggdrasil.content.ItemList
+import core.yggdrasil.ui.ItemList
 import core.yggdrasil.viewmodels.ItemListViewModel
 
 @Composable

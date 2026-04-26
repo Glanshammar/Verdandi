@@ -1,4 +1,4 @@
-package core.yggdrasil.content
+package core.yggdrasil.ui
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
