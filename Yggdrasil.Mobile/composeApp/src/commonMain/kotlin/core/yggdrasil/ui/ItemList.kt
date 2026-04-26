@@ -11,7 +11,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import core.yggdrasil.viewmodels.ItemListViewModel
 import org.jetbrains.compose.resources.painterResource
@@ -34,7 +33,7 @@ fun ItemList(
                     Image(
                         painterResource(Res.drawable.yggdrasil),
                         contentDescription = "Item icon",
-                        modifier = Modifier.size(56.dp)
+                        modifier = Modifier.size(Dimensions.ListItemImageSize)
                     )
                 },
                 trailingContent = {

@@ -16,7 +16,6 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 
 @Composable
 fun AppButton(
@@ -24,7 +23,7 @@ fun AppButton(
     painter: Painter,
     contentDescription: String? = null,
     modifier: Modifier = Modifier,
-    size: Dp = 64.dp,
+    size: Dp = Dimensions.ButtonSize,
     enabled: Boolean = true,
     shape: Shape = RectangleShape,
 ) {
@@ -32,7 +31,7 @@ fun AppButton(
 
     Box(
         modifier = modifier
-            .size(size + 16.dp)
+            .size(size + Dimensions.SpacingMedium)
             .clip(shape)
             .background(Color.Transparent)
             .clickable(

@@ -19,6 +19,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import core.yggdrasil.ui.Dimensions
 import core.yggdrasil.ui.ItemList
 import core.yggdrasil.viewmodels.ItemListViewModel
 
@@ -31,8 +32,8 @@ fun HomeTab() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .padding(Dimensions.SpacingMedium),
+        verticalArrangement = Arrangement.spacedBy(Dimensions.SpacingMedium)
     ) {
         // Add item form
         Card(
@@ -40,7 +41,7 @@ fun HomeTab() {
             elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
         ) {
             Column(
-                modifier = Modifier.padding(16.dp),
+                modifier = Modifier.padding(Dimensions.SpacingMedium),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text("Add New Item", style = MaterialTheme.typography.titleMedium)
