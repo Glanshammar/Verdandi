@@ -16,35 +16,46 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDrawerState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import kotlinx.coroutines.launch
+
+enum class NavigationItem(val label: String) {
+    Home("Home"),
+    Profile("Profile"),
+    Settings("Settings")
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SidebarNavDrawer(
-    content: @Composable () -> Unit
+    content: @Composable (NavigationItem) -> Unit
 ) {
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+    var selectedItem by remember { mutableStateOf(NavigationItem.Home) }
 
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
             ModalDrawerSheet {
-                NavigationDrawerItem(
-                    label = { Text("Home") },
-                    selected = true,
-                    onClick = {  }
-                )
+                NavigationItem.entries.forEach { item ->
+                    NavigationDrawerItem(
+                        label = { Text(item.label) },
+                        selected = item == selectedItem,
+                        onClick = {
+                            selectedItem = item
+                            scope.launch { drawerState.close() }
+                        }
+                    )
+                }
             }
         },
         content = {
             Scaffold(
                 topBar = {
                     TopAppBar(
-                        title = { Text("My App") },
+                        title = { Text(selectedItem.label) },
                         navigationIcon = {
                             IconButton(onClick = { scope.launch { drawerState.open() } }) {
                                 Icon(Icons.Default.Menu, contentDescription = "Menu")
@@ -54,7 +65,7 @@ fun SidebarNavDrawer(
                 }
             ) { paddingValues ->
                 Box(modifier = Modifier.padding(paddingValues).fillMaxSize()) {
-                    content()
+                    content(selectedItem)
                 }
             }
         }
