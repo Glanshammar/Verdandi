@@ -3,7 +3,7 @@ package core.yggdrasil.views
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import core.yggdrasil.content.AppButton
+import core.yggdrasil.ui.AppButton
 import org.jetbrains.compose.resources.painterResource
 import yggdrasil.composeapp.generated.resources.Res
 import yggdrasil.composeapp.generated.resources.yggdrasil

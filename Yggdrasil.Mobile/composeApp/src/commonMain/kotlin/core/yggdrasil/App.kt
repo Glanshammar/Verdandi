@@ -3,7 +3,7 @@ package core.yggdrasil
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.tooling.preview.Preview
-import core.yggdrasil.content.*
+import core.yggdrasil.ui.*
 import core.yggdrasil.views.*
 
 @Composable
