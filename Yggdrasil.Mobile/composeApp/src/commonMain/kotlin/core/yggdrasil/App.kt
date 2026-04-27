@@ -33,6 +33,7 @@ fun App() {
                     clickCount = clickCount,
                     onClickCount = { clickCount++ }
                 )
+                NavigationItem.Downloads -> DownloadTab()
                 NavigationItem.Settings -> SettingsTab()
             }
         }

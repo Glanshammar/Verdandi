@@ -23,6 +23,7 @@ import kotlinx.coroutines.launch
 enum class NavigationItem(val label: String) {
     Home("Home"),
     Profile("Profile"),
+    Downloads("Downloads"),
     Settings("Settings")
 }
 
