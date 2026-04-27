@@ -13,6 +13,8 @@ object Dimensions {
     val IconSizeLarge = 64.dp
     val IconSizeExtraLarge = 120.dp
 
+    val Padding = 16.dp
+
     val ButtonSize = 64.dp
     val ListItemImageSize = 56.dp
 }
