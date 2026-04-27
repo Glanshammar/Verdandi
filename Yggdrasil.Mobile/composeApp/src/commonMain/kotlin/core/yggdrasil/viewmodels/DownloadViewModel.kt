@@ -26,9 +26,16 @@ class DownloadViewModel(
     val downloadState = _downloadState.asStateFlow()
 
     fun startDownload(url: String, fileName: String) {
+        if (url.isBlank() || fileName.isBlank()) {
+            _downloadState.value = DownloadState.Error("URL and File Name cannot be empty.")
+            return
+        }
+
+        val sanitizedFileName = fileName.replace(Regex("[^a-zA-Z0-9._-]"), "_")
+        
         viewModelScope.launch {
             _downloadState.value = DownloadState.Downloading(0f)
-            val destination = Path(appDirs.downloadsDir.toString(), fileName)
+            val destination = Path(appDirs.downloadsDir.toString(), sanitizedFileName)
             
             val result = downloader.downloadFile(url, destination) { progress ->
                 _downloadState.value = DownloadState.Downloading(progress.progress)
@@ -38,7 +45,7 @@ class DownloadViewModel(
                 onSuccess = {
                     _downloadState.value = DownloadState.Completed(destination.toString())
                     ItemRepository.addItem(
-                        title = "Downloaded: $fileName",
+                        title = "Downloaded: $sanitizedFileName",
                         content = "Location: ${destination.toString()}"
                     )
                 },
