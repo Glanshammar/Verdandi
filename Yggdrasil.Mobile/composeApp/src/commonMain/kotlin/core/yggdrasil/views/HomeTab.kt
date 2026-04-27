@@ -18,14 +18,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import core.yggdrasil.ui.Dimensions
 import core.yggdrasil.ui.ItemList
 import core.yggdrasil.viewmodels.ItemListViewModel
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun HomeTab() {
-    val viewModel: ItemListViewModel = viewModel()
+    val viewModel: ItemListViewModel = koinViewModel()
     var title by remember { mutableStateOf("") }
     var content by remember { mutableStateOf("") }
 

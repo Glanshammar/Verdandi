@@ -28,6 +28,7 @@ kotlin {
             implementation(libs.ktor.client.okhttp)
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.androidx.activity.compose)
+            implementation(libs.koin.android)
         }
 
         iosMain.dependencies {
@@ -48,10 +49,15 @@ kotlin {
             implementation(libs.compose.materialIconsCore)
             implementation(libs.compose.materialIconsExtended)
             implementation(libs.compose.navigation)
+            implementation(libs.kotlinx.io.core)
+            implementation(libs.koin.core)
+            implementation(libs.koin.compose)
+            implementation(libs.koin.compose.viewmodel)
             implementation(libs.kotlin.test)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+            implementation(libs.kotlinx.coroutines.test)
         }
         commonMain {
             kotlin.srcDir("src/commonMain/composeResources")

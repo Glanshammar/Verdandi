@@ -11,16 +11,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.viewmodel.compose.viewModel
 import core.yggdrasil.viewmodels.ItemListViewModel
 import org.jetbrains.compose.resources.painterResource
+import org.koin.compose.viewmodel.koinViewModel
 import yggdrasil.composeapp.generated.resources.Res
 import yggdrasil.composeapp.generated.resources.yggdrasil
 
 @Composable
 fun ItemList(
     modifier: Modifier = Modifier,
-    viewModel: ItemListViewModel = viewModel()
+    viewModel: ItemListViewModel = koinViewModel()
 ) {
     val items by viewModel.items.collectAsState()
 
