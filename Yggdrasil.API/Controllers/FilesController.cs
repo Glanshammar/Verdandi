@@ -15,16 +15,12 @@ public class FilesController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
     private readonly ILogger<FilesController> _logger;
-    private readonly string _rootDirectory;
     private readonly FileExtensionContentTypeProvider _contentTypeProvider = new();
 
     public FilesController(ApplicationDbContext context, ILogger<FilesController> logger, IConfiguration configuration)
     {
         _context = context;
         _logger = logger;
-        _rootDirectory = configuration["FileStorage:RootPath"] ?? Path.Combine(Directory.GetCurrentDirectory(), "uploads");
-        
-        Directory.CreateDirectory(_rootDirectory);
     }
 
     // Get all/selective files
@@ -125,8 +121,8 @@ public class FilesController : ControllerBase
             if (!isValid)
                 return BadRequest(new { errors = validationResults.Select(v => v.ErrorMessage) });
             
-            if (!FilePaths.IsPathAllowed(fileDto.FilePath, _rootDirectory))
-                return BadRequest(new { error = "File path is not within allowed directory." });
+            if (!System.IO.File.Exists(fileDto.FilePath))
+                return BadRequest(new { error = "File does not exist at the specified path." });
 
             var file = new Files
             {
