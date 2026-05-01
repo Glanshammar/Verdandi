@@ -1,5 +1,7 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import com.android.build.api.dsl.ApplicationExtension
+import java.util.Properties
+import java.io.FileInputStream
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -7,6 +9,7 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.kotlinSerialization)
+    id("com.codingfeline.buildkonfig") version "0.18.0"
 }
 
 kotlin {
@@ -53,6 +56,7 @@ kotlin {
             implementation(libs.koin.core)
             implementation(libs.koin.compose)
             implementation(libs.koin.compose.viewmodel)
+            implementation(libs.compose.media.player)
             implementation(libs.kotlin.test)
         }
         commonTest.dependencies {
@@ -93,6 +97,27 @@ extensions.configure<ApplicationExtension> {
         getByName("release") {
             isMinifyEnabled = false
         }
+    }
+}
+
+fun getSecret(key: String): String {
+    val properties = Properties()
+    val secretFile = rootProject.file("secrets.properties")
+    if (secretFile.exists()) {
+        properties.load(FileInputStream(secretFile))
+    }
+    return properties.getProperty(key)
+}
+
+buildkonfig {
+    packageName = "core.yggdrasil.BuildKonfig"
+    defaultConfigs {
+        val apiUrl = project.findProperty("API_URL")?.toString()
+        buildConfigField(
+            com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING,
+            "API_URL",
+            "\"${getSecret("API_URL")}\""
+        )
     }
 }
 
