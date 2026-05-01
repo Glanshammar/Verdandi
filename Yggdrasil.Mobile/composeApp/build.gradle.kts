@@ -110,7 +110,7 @@ fun getSecret(key: String): String {
 }
 
 buildkonfig {
-    packageName = "core.yggdrasil.BuildKonfig"
+    packageName = "core.yggdrasil"
     defaultConfigs {
         val apiUrl = project.findProperty("API_URL")?.toString()
         buildConfigField(

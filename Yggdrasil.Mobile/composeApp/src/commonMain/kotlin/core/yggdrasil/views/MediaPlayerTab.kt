@@ -9,7 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import core.yggdrasil.data.ItemRepository
 import core.yggdrasil.ui.Dimensions
-import core.yggdrasil.ui.filePicker
+import core.yggdrasil.ui.FilePicker
 import core.yggdrasil.viewmodels.MediaPlayerViewModel
 import chaintech.videoplayer.host.MediaPlayerHost
 import chaintech.videoplayer.ui.video.VideoPlayerComposable
@@ -24,7 +24,7 @@ fun MediaPlayerTab() {
     
     var inputUrl by remember { mutableStateOf("https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4") }
 
-    val filePicker = filePicker { path ->
+    val filePicker = FilePicker { path ->
         path?.let { viewModel.setLocalPath(it) }
     }
 
