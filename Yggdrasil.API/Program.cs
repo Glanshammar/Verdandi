@@ -1,7 +1,21 @@
+using System.Net;
 using Microsoft.EntityFrameworkCore;
 using Yggdrasil.API.Context;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.WebHost.ConfigureKestrel(options =>
+{
+    var httpUrl = Environment.GetEnvironmentVariable("ASPNETCORE_URL") ?? 
+                  builder.Configuration.GetValue<string>("Kestrel:Endpoints:Http:Url") ?? 
+                  "http://*:5000";
+
+    if (Uri.TryCreate(httpUrl, UriKind.Absolute, out var uri))
+    {
+        var ip = IPAddress.Parse(uri.Host == "*" || string.IsNullOrEmpty(uri.Host) ? "0.0.0.0" : uri.Host);
+        options.Listen(ip, uri.Port);
+    }
+});
 
 builder.Services.AddOpenApi();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -31,7 +45,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors("AllowAll");
 app.MapControllers();
-// app.UseHttpsRedirection();
+app.UseHttpsRedirection();
 
 app.MapGet("/api/status", () => Results.Ok(new { 
         status = "ok", 
