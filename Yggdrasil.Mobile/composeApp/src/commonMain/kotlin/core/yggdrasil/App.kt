@@ -34,6 +34,7 @@ fun App() {
                     onClickCount = { clickCount++ }
                 )
                 NavigationItem.Downloads -> DownloadTab()
+                NavigationItem.MediaPlayer -> MediaPlayerTab()
                 NavigationItem.Api -> ApiTab()
                 NavigationItem.Settings -> SettingsTab()
             }

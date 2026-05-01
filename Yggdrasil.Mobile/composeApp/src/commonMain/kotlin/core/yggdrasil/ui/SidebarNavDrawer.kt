@@ -24,6 +24,7 @@ enum class NavigationItem(val label: String) {
     Home("Home"),
     Profile("Profile"),
     Downloads("Downloads"),
+    MediaPlayer("Media Player"),
     Api("API"),
     Settings("Settings")
 }
