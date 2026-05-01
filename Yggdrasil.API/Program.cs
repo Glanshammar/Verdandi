@@ -29,15 +29,14 @@ if (app.Environment.IsDevelopment())
     await dbContext.Database.MigrateAsync();
 }
 
-app.UseHttpsRedirection();
-app.MapControllers();
 app.UseCors("AllowAll");
+app.MapControllers();
+// app.UseHttpsRedirection();
 
-// Simple status endpoint
 app.MapGet("/api/status", () => Results.Ok(new { 
         status = "ok", 
-        message = "API is online and running",
-        timestamp = DateTime.UtcNow 
+        message = "API is online",
+        timestamp = DateTime.UtcNow
     }))
     .WithName("GetApiStatus");
 
