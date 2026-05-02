@@ -3,11 +3,17 @@ package core.yggdrasil.network.api
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
+import io.ktor.client.statement.HttpResponse
+import io.ktor.http.*
 import core.yggdrasil.BuildKonfig
+import io.ktor.client.statement.bodyAsText
+
+object ApiConfig {
+    val URL = BuildKonfig.API_URL.trim('"') + "/api"
+}
 
 class YggdrasilApi(private val client: HttpClient) {
     suspend fun onlineStatus(): ApiStatus {
-        return client.get("${BuildKonfig.API_URL}/status").body()
         val response = client.get("${ApiConfig.URL}/status")
         println(response.status)
         println(response.bodyAsText())
@@ -40,5 +46,15 @@ class YggdrasilApi(private val client: HttpClient) {
     suspend fun deleteFile(id: Int) {
         client.delete("${ApiConfig.URL}/files/$id")
     }
+
+    suspend fun downloadFiles(ids: List<Int>): HttpResponse {
+        return if (ids.size == 1) {
+            client.get("${ApiConfig.URL}/files/${ids[0]}/download")
+        } else {
+            client.post("${ApiConfig.URL}/files/download") {
+                contentType(ContentType.Application.Json)
+                setBody(DownloadRequest(ids))
+            }
+        }
     }
 }

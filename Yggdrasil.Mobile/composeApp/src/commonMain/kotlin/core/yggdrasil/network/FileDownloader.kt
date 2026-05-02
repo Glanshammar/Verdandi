@@ -27,13 +27,20 @@ class FileDownloader(private val httpClient: HttpClient) {
         destination: Path,
         onProgress: (DownloadProgress) -> Unit
     ): Result<Unit> = withContext(Dispatchers.Default) {
-        if (!url.startsWith("https://", ignoreCase = true)) {
-            return@withContext Result.failure(Exception("Only HTTPS URLs are allowed for security."))
-        }
-
         try {
             val response = httpClient.get(url)
-            
+            downloadFromResponse(response, destination, onProgress)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun downloadFromResponse(
+        response: HttpResponse,
+        destination: Path,
+        onProgress: (DownloadProgress) -> Unit
+    ): Result<Unit> = withContext(Dispatchers.Default) {
+        try {
             if (!response.status.isSuccess()) {
                 return@withContext Result.failure(Exception("HTTP error: ${response.status}"))
             }

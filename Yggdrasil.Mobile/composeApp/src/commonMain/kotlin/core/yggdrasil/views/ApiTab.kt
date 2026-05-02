@@ -96,6 +96,16 @@ fun ApiTab() {
                         Text("GET")
                     }
                     Button(
+                        onClick = {
+                            val ids = idInput.split(",").mapNotNull { it.trim().toIntOrNull() }
+                            if (ids.isNotEmpty()) viewModel.callDownloadFiles(ids)
+                        },
+                        modifier = Modifier.weight(1f),
+                        enabled = idInput.isNotBlank()
+                    ) {
+                        Text("Download")
+                    }
+                    Button(
                         onClick = { idInput.toIntOrNull()?.let { viewModel.callDeleteFile(it) } },
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
