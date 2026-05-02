@@ -19,6 +19,25 @@ class ApiViewModel(private val repository: ApiRepository) : ViewModel() {
     val state = _state.asStateFlow()
 
     fun callOnlineStatus() {
+        performApiCall { repository.getOnlineStatus() }
+    }
+
+    fun callListFiles() {
+        performApiCall { repository.listFiles() }
+    }
+
+    fun callAddFile(filePath: String) {
+        performApiCall { repository.addFile(filePath) }
+    }
+
+    fun callGetFile(id: Int) {
+        performApiCall { repository.getFile(id) }
+    }
+
+    fun callDeleteFile(id: Int) {
+        performApiCall { repository.deleteFile(id) }
+    }
+
         viewModelScope.launch {
             _state.value = ApiState.Loading
             try {
