@@ -3,8 +3,11 @@ package core.yggdrasil.views
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import core.yggdrasil.data.ItemRepository
@@ -20,12 +23,16 @@ import org.koin.compose.viewmodel.koinViewModel
 fun MediaPlayerTab() {
     val viewModel: MediaPlayerViewModel = koinViewModel()
     val mediaUrl by viewModel.mediaUrl.collectAsState()
-    val items by ItemRepository.items.collectAsState()
+    val mediaItems by viewModel.availableMedia.collectAsState()
     
-    var inputUrl by remember { mutableStateOf("https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4") }
+    var inputUrl by remember { mutableStateOf("") }
 
     val filePicker = FilePicker { path ->
-        path?.let { viewModel.setLocalPath(it) }
+        path?.let { 
+            viewModel.setLocalPath(it) 
+            val fileName = it.substringAfterLast("/")
+            ItemRepository.addItem(fileName, "Location: $it")
+        }
     }
 
     val playerHost = remember { 
@@ -35,7 +42,6 @@ fun MediaPlayerTab() {
         ) 
     }
     
-    // Update playerHost when mediaUrl changes in ViewModel
     LaunchedEffect(mediaUrl) {
         if (mediaUrl.isNotBlank()) {
             playerHost.loadUrl(mediaUrl)
@@ -84,27 +90,43 @@ fun MediaPlayerTab() {
             onClick = { filePicker() },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Browse System Files (SD Card, etc.)")
+            Text("Browse System Files")
         }
 
-        Text("Recent / Downloaded Items", style = MaterialTheme.typography.titleMedium)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("Available Media Items", style = MaterialTheme.typography.titleMedium)
+            IconButton(onClick = { 
+                viewModel.refreshRemoteMedia() 
+                viewModel.scanLocalMedia()
+            }) {
+                Icon(Icons.Default.Refresh, contentDescription = "Refresh media items")
+            }
+        }
         
         LazyColumn(
             modifier = Modifier.fillMaxWidth().weight(1f),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            items(items) { item ->
+            items(mediaItems, key = { it.id }) { item ->
                 Card(
-                    onClick = { 
-                        val path = item.content.removePrefix("Location: ")
-                        viewModel.setLocalPath(path) 
-                    },
+                    onClick = { viewModel.setMedia(item.url) },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     ListItem(
                         headlineContent = { Text(item.title) },
-                        supportingContent = { Text(item.content) },
-                        colors = if (mediaUrl == "file://${item.content.removePrefix("Location: ")}" || mediaUrl == item.content.removePrefix("Location: ")) {
+                        supportingContent = { Text("${item.type} - ${item.url}") },
+                        trailingContent = {
+                            if (item.isDownloaded) {
+                                Badge(containerColor = MaterialTheme.colorScheme.primary) {
+                                    Text("Downloaded")
+                                }
+                            }
+                        },
+                        colors = if (mediaUrl == item.url) {
                             ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.primaryContainer)
                         } else {
                             ListItemDefaults.colors()
@@ -113,10 +135,10 @@ fun MediaPlayerTab() {
                 }
             }
             
-            if (items.isEmpty()) {
+            if (mediaItems.isEmpty()) {
                 item {
                     Text(
-                        "No downloaded items found. Use the Downloads tab to add some!",
+                        "No media items found. Use the Downloads tab to add some or refresh the list.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.secondary,
                         modifier = Modifier.padding(vertical = 16.dp)
