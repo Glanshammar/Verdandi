@@ -24,4 +24,10 @@ class IosAppDirs : AppDirs {
         }
         dir
     }
+
+    override val allStorageDirs: List<Path> by lazy {
+        val paths = NSFileManager.defaultManager.URLsForDirectory(NSDocumentDirectory, NSUserDomainMask)
+        val documentsDirectory = paths.first() as NSURL
+        listOf(downloadsDir, Path(documentsDirectory.path!!))
+    }
 }
