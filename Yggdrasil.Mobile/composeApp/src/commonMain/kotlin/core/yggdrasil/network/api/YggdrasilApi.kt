@@ -3,7 +3,7 @@ package core.yggdrasil.network.api
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
-import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.HttpStatement
 import io.ktor.http.*
 import core.yggdrasil.BuildKonfig
 import io.ktor.client.statement.bodyAsText
@@ -47,11 +47,11 @@ class YggdrasilApi(private val client: HttpClient) {
         client.delete("${ApiConfig.URL}/files/$id")
     }
 
-    suspend fun downloadFiles(ids: List<Int>): HttpResponse {
+    suspend fun downloadFiles(ids: List<Int>): HttpStatement {
         return if (ids.size == 1) {
-            client.get("${ApiConfig.URL}/files/${ids[0]}/download")
+            client.prepareGet("${ApiConfig.URL}/files/${ids[0]}/download")
         } else {
-            client.post("${ApiConfig.URL}/files/download") {
+            client.preparePost("${ApiConfig.URL}/files/download") {
                 contentType(ContentType.Application.Json)
                 setBody(DownloadRequest(ids))
             }

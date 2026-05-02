@@ -28,8 +28,9 @@ class FileDownloader(private val httpClient: HttpClient) {
         onProgress: (DownloadProgress) -> Unit
     ): Result<Unit> = withContext(Dispatchers.Default) {
         try {
-            val response = httpClient.get(url)
-            downloadFromResponse(response, destination, onProgress)
+            httpClient.prepareGet(url).execute { response ->
+                downloadFromResponse(response, destination, onProgress)
+            }
         } catch (e: Exception) {
             Result.failure(e)
         }

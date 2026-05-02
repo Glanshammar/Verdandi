@@ -3,7 +3,7 @@ package core.yggdrasil.data
 import core.yggdrasil.network.api.ApiFile
 import core.yggdrasil.network.api.ApiStatus
 import core.yggdrasil.network.api.YggdrasilApi
-import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.HttpStatement
 
 class ApiRepository(private val api: YggdrasilApi) {
     suspend fun getOnlineStatus(): ApiStatus = api.onlineStatus()
@@ -20,5 +20,5 @@ class ApiRepository(private val api: YggdrasilApi) {
 
     suspend fun deleteFile(id: Int) = api.deleteFile(id)
 
-    suspend fun downloadFiles(ids: List<Int>): HttpResponse = api.downloadFiles(ids)
+    suspend fun downloadFiles(ids: List<Int>): HttpStatement = api.downloadFiles(ids)
 }
