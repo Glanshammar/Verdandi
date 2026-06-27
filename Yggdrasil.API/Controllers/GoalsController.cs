@@ -19,8 +19,7 @@ public class GoalsController : ControllerBase
         _context = context;
         _logger = logger;
     }
-
-    // Get all goals
+    
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<Goal>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<Goal>>> GetGoals()
@@ -28,7 +27,7 @@ public class GoalsController : ControllerBase
         try
         {
             var goals = await _context.Goals
-                .Include(g => g.Tasks)
+                .Include(g => g.GoalTasks)
                 .ToListAsync();
             return Ok(goals);
         }
@@ -38,8 +37,7 @@ public class GoalsController : ControllerBase
             return StatusCode(500, new { error = "An error occurred while retrieving goals" });
         }
     }
-
-    // Get single goal by ID
+    
     [HttpGet("{id}")]
     [ProducesResponseType(typeof(Goal), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -48,13 +46,11 @@ public class GoalsController : ControllerBase
         try
         {
             var goal = await _context.Goals
-                .Include(g => g.Tasks)
+                .Include(g => g.GoalTasks)
                 .FirstOrDefaultAsync(g => g.Id == id);
             
             if (goal == null)
-            {
-                return NotFound(new { error = $"Goal with ID {id} not found" });
-            }
+                return NotFound(new { error = $"Goal not found" });
             
             return Ok(goal);
         }
@@ -64,8 +60,7 @@ public class GoalsController : ControllerBase
             return StatusCode(500, new { error = "An error occurred while retrieving the goal" });
         }
     }
-
-    // Create goal
+    
     [HttpPost]
     [ProducesResponseType(typeof(Goal), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -78,14 +73,13 @@ public class GoalsController : ControllerBase
             bool isValid = Validator.TryValidateObject(goalDto, validationContext, validationResults, true);
             
             if (!isValid)
-            {
                 return BadRequest(new { errors = validationResults.Select(v => v.ErrorMessage) });
-            }
             
             var goal = new Goal
             {
                 Name = goalDto.Name,
                 Description = goalDto.Description,
+                Priority = goalDto.Priority,
                 IsCompleted = goalDto.IsCompleted
             };
             
@@ -100,8 +94,7 @@ public class GoalsController : ControllerBase
             return StatusCode(500, new { error = "An error occurred while creating the goal" });
         }
     }
-
-    // Update goal
+    
     [HttpPut("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -112,21 +105,18 @@ public class GoalsController : ControllerBase
         {
             var goal = await _context.Goals.FindAsync(id);
             if (goal == null)
-            {
                 return NotFound(new { error = $"Goal with ID {id} not found" });
-            }
             
             var validationResults = new List<ValidationResult>();
             var validationContext = new ValidationContext(goalDto);
             bool isValid = Validator.TryValidateObject(goalDto, validationContext, validationResults, true);
             
             if (!isValid)
-            {
                 return BadRequest(new { errors = validationResults.Select(v => v.ErrorMessage) });
-            }
             
             goal.Name = goalDto.Name;
             goal.Description = goalDto.Description;
+            goal.Priority = goalDto.Priority;
             goal.IsCompleted = goalDto.IsCompleted;
             
             await _context.SaveChangesAsync();
@@ -139,8 +129,7 @@ public class GoalsController : ControllerBase
             return StatusCode(500, new { error = "An error occurred while updating the goal" });
         }
     }
-
-    // Delete a goal
+    
     [HttpDelete("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -150,9 +139,7 @@ public class GoalsController : ControllerBase
         {
             var goal = await _context.Goals.FindAsync(id);
             if (goal == null)
-            {
                 return NotFound(new { error = $"Goal with ID {id} not found" });
-            }
             
             _context.Goals.Remove(goal);
             await _context.SaveChangesAsync();
@@ -165,8 +152,7 @@ public class GoalsController : ControllerBase
             return StatusCode(500, new { error = "An error occurred while deleting the goal" });
         }
     }
-
-    //Add task to goal
+    
     [HttpPost("{goalId}/tasks/{taskId}")]
     [ProducesResponseType(typeof(Goal), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -176,29 +162,29 @@ public class GoalsController : ControllerBase
         try
         {
             var goal = await _context.Goals
-                .Include(g => g.Tasks)
+                .Include(g => g.GoalTasks)
                 .FirstOrDefaultAsync(g => g.Id == goalId);
-            
+        
             if (goal == null)
-            {
                 return NotFound(new { error = $"Goal with ID {goalId} not found" });
-            }
-            
+        
             var task = await _context.Tasks.FindAsync(taskId);
             if (task == null)
-            {
                 return NotFound(new { error = $"Task with ID {taskId} not found" });
-            }
-            
-            // Check if task is already associated with the goal
-            if (goal.Tasks.Any(t => t.Id == taskId))
-            {
+        
+            if (goal.GoalTasks.Any(gt => gt.TaskId == taskId))
                 return Conflict(new { error = $"Task with ID {taskId} is already associated with this goal" });
-            }
-            
-            goal.Tasks.Add(task);
+        
+            var goalTask = new GoalTask
+            {
+                GoalId = goalId,
+                TaskId = taskId,
+                CompletedDate = null
+            };
+        
+            goal.GoalTasks.Add(goalTask);
+        
             await _context.SaveChangesAsync();
-            
             return Ok(goal);
         }
         catch (Exception ex)
@@ -207,8 +193,7 @@ public class GoalsController : ControllerBase
             return StatusCode(500, new { error = "An error occurred while adding task to goal" });
         }
     }
-
-    // Remove a task from goal
+    
     [HttpDelete("{goalId}/tasks/{taskId}")]
     [ProducesResponseType(typeof(Goal), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -217,21 +202,17 @@ public class GoalsController : ControllerBase
         try
         {
             var goal = await _context.Goals
-                .Include(g => g.Tasks)
+                .Include(g => g.GoalTasks)
                 .FirstOrDefaultAsync(g => g.Id == goalId);
             
             if (goal == null)
-            {
                 return NotFound(new { error = $"Goal with ID {goalId} not found" });
-            }
             
-            var task = goal.Tasks.FirstOrDefault(t => t.Id == taskId);
+            var task = goal.GoalTasks.FirstOrDefault(t => t.Id == taskId);
             if (task == null)
-            {
                 return NotFound(new { error = $"Task with ID {taskId} not found in this goal" });
-            }
             
-            goal.Tasks.Remove(task);
+            goal.GoalTasks.Remove(task);
             await _context.SaveChangesAsync();
             
             return Ok(goal);

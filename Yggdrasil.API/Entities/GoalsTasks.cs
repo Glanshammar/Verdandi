@@ -3,6 +3,31 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Yggdrasil.API.Entities;
 
+public enum Priority
+{
+    LittleImportant = 0,
+    MediumImportant = 1,
+    VeryImportant = 2,
+    CriticalImportant = 3,
+}
+
+public class TaskStep
+{
+    [Key]
+    public int Id { get; set; }
+    
+    [Required]
+    public int TaskId { get; set; }
+    
+    [Required]
+    [MinLength(1)]
+    [MaxLength(50)]
+    public string StepTitle { get; set; } = string.Empty;
+    
+    [Required]
+    public bool IsCompleted { get; set; } = false;
+}
+
 public class Task
 {
     [Key]
@@ -13,10 +38,17 @@ public class Task
     public string TaskName { get; set; } = string.Empty;
     
     [Required]
+    public Priority Priority { get; set; } = Priority.MediumImportant;
+    
+    [Required]
     [MaxLength(500)]
     public string TaskDescription { get; set; } = string.Empty;
     
-    public virtual ICollection<Goal> Goals { get; set; } = new List<Goal>();
+    [Required]
+    public bool IsCompleted { get; set; } = false;
+    
+    public virtual ICollection<GoalTask> GoalTasks { get; set; } = new List<GoalTask>();
+    public virtual ICollection<TaskStep> TaskSteps { get; set; } = new List<TaskStep>();
 }
 
 public class Goal
@@ -28,13 +60,16 @@ public class Goal
     [MaxLength(100)]
     public string Name { get; set; } = string.Empty;
     
+    [Required]
+    public Priority Priority { get; set; } = Priority.MediumImportant;
+    
     [MaxLength(500)]
     public string Description { get; set; } = string.Empty;
     
     [Required]
     public bool IsCompleted { get; set; } = false;
     
-    public virtual ICollection<Task> Tasks { get; set; } = new List<Task>();
+    public virtual ICollection<GoalTask> GoalTasks { get; set; } = new List<GoalTask>();
 }
 
 public class GoalTask
@@ -53,8 +88,5 @@ public class GoalTask
     public virtual Goal Goal { get; set; } = null!;
     public virtual Task Task { get; set; } = null!;
     
-    // You can add additional properties here if needed
-    // For example:
-    // public DateTime? CompletedDate { get; set; }
-    // public bool IsPrimary { get; set; }
+    public DateTime? CompletedDate { get; set; }
 }

@@ -4,7 +4,6 @@ using System.ComponentModel.DataAnnotations;
 using Yggdrasil.API.Context;
 using Yggdrasil.API.DTO;
 using Entities_Task = Yggdrasil.API.Entities.Task;
-using Task = Yggdrasil.API.Entities.Task;
 
 namespace Yggdrasil.API.Controllers;
 
@@ -29,7 +28,7 @@ public class TasksController : ControllerBase
         try
         {
             var tasks = await _context.Tasks
-                .Include(t => t.Goals)
+                .Include(t => t.GoalTasks)
                 .ToListAsync();
             return Ok(tasks);
         }
@@ -50,7 +49,7 @@ public class TasksController : ControllerBase
         try
         {
             var task = await _context.Tasks
-                .Include(t => t.Goals)
+                .Include(t => t.GoalTasks)
                 .FirstOrDefaultAsync(t => t.Id == id);
             
             if (task == null)
