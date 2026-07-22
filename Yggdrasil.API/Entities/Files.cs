@@ -26,9 +26,25 @@ public class Files
     [MaxLength(500)]
     [Column("file_path")]
     public string FilePath { get; set; } = string.Empty;
-
-    [MinLength(2)]
+    
     [MaxLength(20)]
     [Column("file_type")]
     public string FileType { get; set; } = string.Empty;
+}
+
+public class GoalFile
+{
+    [Key]
+    public int Id { get; set; }
+    
+    [Required]
+    [ForeignKey(nameof(Goal))]
+    public int GoalId { get; set; }
+    
+    [Required]
+    [ForeignKey(nameof(File))]
+    public int FileId { get; set; }
+    
+    public virtual Goal Goal { get; set; } = null!;
+    public virtual Task File { get; set; } = null!;
 }
