@@ -8,7 +8,7 @@ builder.WebHost.ConfigureKestrel(options =>
 {
     var httpUrl = Environment.GetEnvironmentVariable("ASPNETCORE_URL") ?? 
                   builder.Configuration.GetValue<string>("Kestrel:Endpoints:Http:Url") ?? 
-                  "http://*:5000";
+                  "http://0.0.0.0:5000";
 
     if (Uri.TryCreate(httpUrl, UriKind.Absolute, out var uri))
     {
