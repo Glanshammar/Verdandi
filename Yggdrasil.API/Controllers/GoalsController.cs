@@ -80,7 +80,6 @@ public class GoalsController : ControllerBase
                 Name = goalDto.Name,
                 Description = goalDto.Description,
                 Priority = goalDto.Priority,
-                IsCompleted = goalDto.IsCompleted
             };
             
             _context.Goals.Add(goal);
@@ -117,7 +116,6 @@ public class GoalsController : ControllerBase
             goal.Name = goalDto.Name;
             goal.Description = goalDto.Description;
             goal.Priority = goalDto.Priority;
-            goal.IsCompleted = goalDto.IsCompleted;
             
             await _context.SaveChangesAsync();
             

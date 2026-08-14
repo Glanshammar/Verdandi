@@ -5,10 +5,10 @@ namespace Yggdrasil.API.Entities;
 
 public enum Priority
 {
-    LittleImportant = 0,
-    MediumImportant = 1,
-    VeryImportant = 2,
-    CriticalImportant = 3,
+    Low = 0,
+    Medium = 1,
+    High = 2,
+    Critical = 3,
 }
 
 public class TaskStep
@@ -19,12 +19,13 @@ public class TaskStep
     [Required]
     public int TaskId { get; set; }
     
+    [ForeignKey(nameof(TaskId))]
+    public virtual Task Task { get; set; } = null!;
+    
     [Required]
-    [MinLength(1)]
     [MaxLength(50)]
     public string StepTitle { get; set; } = string.Empty;
     
-    [Required]
     public bool IsCompleted { get; set; } = false;
 }
 
@@ -35,17 +36,23 @@ public class Task
     
     [Required]
     [MaxLength(50)]
+    [Column("task_name")]
     public string TaskName { get; set; } = string.Empty;
     
     [Required]
-    public Priority Priority { get; set; } = Priority.MediumImportant;
+    public Priority Priority { get; set; } = Priority.Medium;
+
+    public DateTime? DueDate { get; set; } = null!;
     
     [Required]
     [MaxLength(500)]
+    [Column("task_description")]
     public string TaskDescription { get; set; } = string.Empty;
     
-    [Required]
     public bool IsCompleted { get; set; } = false;
+    
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime? UpdatedAt { get; set; } = null!;
     
     public virtual ICollection<GoalTask> GoalTasks { get; set; } = new List<GoalTask>();
     public virtual ICollection<TaskStep> TaskSteps { get; set; } = new List<TaskStep>();
@@ -61,15 +68,26 @@ public class Goal
     public string Name { get; set; } = string.Empty;
     
     [Required]
-    public Priority Priority { get; set; } = Priority.MediumImportant;
+    public Priority Priority { get; set; } = Priority.Medium;
+    
+    [Required]
+    public DateTime TargetDate { get; set; }
     
     [MaxLength(500)]
     public string Description { get; set; } = string.Empty;
     
-    [Required]
     public bool IsCompleted { get; set; } = false;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime? UpdatedAt { get; set; } =  null;
+    
+    public GoalCustomData CustomData { get; set; } = new();
     
     public virtual ICollection<GoalTask> GoalTasks { get; set; } = new List<GoalTask>();
+}
+
+public class GoalCustomData
+{
+    public Dictionary<string, string> Fields { get; set; } = new();
 }
 
 public class GoalTask

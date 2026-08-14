@@ -13,8 +13,9 @@ public class GoalDto
     [MaxLength(500)]
     public string Description { get; set; } = string.Empty;
     
-    public Priority Priority { get; set; } = Priority.MediumImportant;
-    
+    public Priority Priority { get; set; } = Priority.Medium;
+
+    public DateTime? DueDate { get; set; } = null;
     public bool IsCompleted { get; set; } = false;
 }
 
