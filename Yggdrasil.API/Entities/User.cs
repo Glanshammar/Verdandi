@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Konscious.Security.Cryptography;
@@ -12,7 +13,7 @@ public class User
 {
     [Key]
     [Column("id")]
-    public int Id { get; set; }
+    public Guid Id { get; set; } 
 
     [Required]
     [MaxLength(100)]
