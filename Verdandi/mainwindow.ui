@@ -26,14 +26,14 @@
       <item>
        <widget class="QToolButton" name="buttonDashboard">
         <property name="text">
-         <string>...</string>
+         <string>Dashboard</string>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QToolButton" name="toolButton_2">
+       <widget class="QToolButton" name="buttonPage2">
         <property name="text">
-         <string>...</string>
+         <string>Page 2</string>
         </property>
        </widget>
       </item>
@@ -174,14 +174,14 @@
          <widget class="QLabel" name="labelPage2">
           <property name="geometry">
            <rect>
-            <x>350</x>
-            <y>270</y>
-            <width>411</width>
-            <height>111</height>
+            <x>450</x>
+            <y>280</y>
+            <width>191</width>
+            <height>101</height>
            </rect>
           </property>
           <property name="text">
-           <string>Page 2</string>
+           <string>TextLabel</string>
           </property>
          </widget>
         </widget>

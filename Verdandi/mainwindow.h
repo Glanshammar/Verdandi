@@ -37,6 +37,14 @@ private slots:
 
     void on_buttonApiPost_clicked();
 
+    void on_buttonPage2_triggered(QAction *arg1);
+
+    void on_buttonDashboard_triggered(QAction *arg1);
+
+    void on_buttonDashboard_clicked();
+
+    void on_buttonPage2_clicked();
+
 private:
     Ui::MainWindow *ui;
     ApiClient *api;

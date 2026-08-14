@@ -134,3 +134,27 @@ void MainWindow::on_buttonApiPost_clicked()
 
 }
 
+
+void MainWindow::on_buttonPage2_triggered(QAction *arg1)
+{
+    ui->TabsWidget->setCurrentIndex(1);
+}
+
+
+void MainWindow::on_buttonDashboard_triggered(QAction *arg1)
+{
+    ui->TabsWidget->setCurrentIndex(0);
+}
+
+
+void MainWindow::on_buttonDashboard_clicked()
+{
+    ui->TabsWidget->setCurrentIndex(0);
+}
+
+
+void MainWindow::on_buttonPage2_clicked()
+{
+    ui->TabsWidget->setCurrentIndex(1);
+}
+
