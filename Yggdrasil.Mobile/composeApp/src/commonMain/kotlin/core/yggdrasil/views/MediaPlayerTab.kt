@@ -141,7 +141,7 @@ fun MediaPlayerTab() {
                         "No media items found. Use the Downloads tab to add some or refresh the list.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.secondary,
-                        modifier = Modifier.padding(vertical = 16.dp)
+                        modifier = Modifier.padding(vertical = Dimensions.Padding)
                     )
                 }
             }
