@@ -1,7 +1,6 @@
-﻿using System;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ValueGeneration;
-using DotNetEnv;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Yggdrasil.API.Entities;
 using Tasks = Yggdrasil.API.Entities.Task;
@@ -71,9 +70,15 @@ public partial class ApplicationDbContext : DbContext
             {
                 if (property.ClrType == typeof(Guid) && property.ValueGenerated == ValueGenerated.OnAdd)
                 {
-                    property.SetValueGeneratorFactory((_, _) => new GuidValueGenerator<Guid>(Guid.CreateVersion7));
+                    property.SetValueGeneratorFactory((_, _) => new Version7GuidValueGenerator());
                 }
             }
         }
     }
+}
+
+public class Version7GuidValueGenerator : ValueGenerator<Guid>
+{
+    public override Guid Next(EntityEntry entry) => Guid.CreateVersion7();
+    public override bool GeneratesTemporaryValues => false;
 }
