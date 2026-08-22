@@ -9,7 +9,7 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.kotlinSerialization)
-    id("com.codingfeline.buildkonfig") version "0.18.0"
+    id("com.codingfeline.buildkonfig") version "0.22.0"
 }
 
 kotlin {
@@ -74,11 +74,11 @@ kotlin {
 }
 
 extensions.configure<ApplicationExtension> {
-    namespace = "core.yggdrasil"
+    namespace = "core.verdandi"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
-        applicationId = "core.yggdrasil"
+        applicationId = "core.verdandi"
         minSdk = libs.versions.android.minSdk.get().toInt()
         //noinspection OldTargetApi
         targetSdk = libs.versions.android.targetSdk.get().toInt()
@@ -114,7 +114,7 @@ fun getSecret(key: String): String {
 }
 
 buildkonfig {
-    packageName = "core.yggdrasil"
+    packageName = "core.verdandi"
     defaultConfigs {
         val apiUrl = project.findProperty("API_URL")?.toString()
         buildConfigField(
